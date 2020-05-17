@@ -1,0 +1,86 @@
+% \input{include/twoside}
+\input{include/oneside}
+
+\usepackage{perpage}
+\MakePerPage{footnote}
+
+\usepackage{include/thesis}
+\usepackage{enumitem}
+\setlist{nolistsep}
+
+\usepackage{rotating}
+
+\usepackage{xcolor,colortbl}
+
+\usepackage{listings}
+\lstset{
+	basicstyle=\small\ttfamily, % print whole listing small
+	keywordstyle=\color{black}\bfseries, % bold black keywords
+	identifierstyle=, % nothing happens
+	commentstyle=\color{gray},
+	showstringspaces=true,
+	aboveskip=1em,
+	belowskip=0.7em,
+	columns=flexible,
+	numbers=none,
+	backgroundcolor=\color{white},
+	extendedchars=false,
+	inputencoding=utf8,
+	xleftmargin=0em,
+	xrightmargin=0em,
+	framexleftmargin=0em,
+	framextopmargin=0em,
+	framexbottommargin=0em,
+	frame=none,
+	framerule=0pt,
+	escapeinside={(*@}{@*)}
+}
+
+\input{include/notation}
+
+\input{include/variables}
+
+\bibliography{bibliography}
+\addbibresource{bibliography.bib}
+
+\setlength{\parskip}{8pt}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+\frontmatter
+
+\include{include/titlepage}
+
+\tableofcontents
+
+\cleartorecto
+\include{declaration}
+
+\include{abstract}
+
+\mainmatter
+
+\include{chapters/01}
+\include{chapters/02}
+\include{chapters/03}
+\include{chapters/04}
+\include{chapters/05}
+\include{chapters/06}
+\include{chapters/07}
+\include{chapters/08}
+\include{chapters/09}
+\include{acknowledgements}
+
+\printbibliography
+
+\include{appendix}
+
+\label{page:last}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: nil
+%%% End:

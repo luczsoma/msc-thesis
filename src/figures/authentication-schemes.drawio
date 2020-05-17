@@ -1,0 +1,95 @@
+<mxfile host="localhost" modified="2020-05-17T19:34:27.044Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.45.0 Chrome/78.0.3904.130 Electron/7.2.4 Safari/537.36" etag="w2BpNanWeo0w-YhC16Tc" version="13.0.9">
+    <diagram id="Sttl8mKHboSlKdve3zSI" name="Page-1">
+        <mxGraphModel dx="625" dy="579" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="104" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;" parent="1" source="81" target="84" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="105" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;" parent="1" source="81" target="83" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="410" y="90"/>
+                            <mxPoint x="680" y="90"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="106" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;" parent="1" source="81" target="82" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="410" y="90"/>
+                            <mxPoint x="140" y="90"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="81" value="&lt;b&gt;DiplomatiqAuthenticationScheme&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="40" width="220" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="82" value="&lt;b&gt;AuthenticationSessionSignatureV1&lt;/b&gt;&lt;br&gt;signing with AuthenticationSessionKey" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="10" y="100" width="260" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="83" value="&lt;b&gt;SessionSignatureV1&lt;/b&gt;&lt;br&gt;signing with DeviceKey" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="100" width="260" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="84" value="&lt;b&gt;DeviceSignatureV1&lt;/b&gt;&lt;br&gt;signing with DeviceKey" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="100" width="260" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="100" value="for performing password and multi-factor &lt;br&gt;authentication, and registering a device" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0;dx=10;notch=10;" parent="1" vertex="1">
+                    <mxGeometry x="10" y="170" width="270" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="102" value="for getting a session" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0;dx=10;notch=10;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="170" width="270" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="103" value="for every other API call" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0;dx=10;notch=10;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="170" width="270" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="117" value="&lt;font face=&quot;Courier New&quot;&gt;AuthenticationSessionId:&lt;br&gt;&lt;span&gt;mk6GE1DgGaGmmhk2zjMseOBUtviJ9SoW&lt;/span&gt;&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="10" y="340" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="118" value="&lt;font face=&quot;Courier New&quot;&gt;DeviceId:&lt;br&gt;&lt;span&gt;hfX9IcsIfC3xDFL5Zmcfjckz1Sv8lCez&lt;/span&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="340" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="119" value="&lt;font face=&quot;Courier New&quot;&gt;DeviceId:&lt;br&gt;&lt;span&gt;hfX9IcsIfC3xDFL5Zmcfjckz1Sv8lCez&lt;br&gt;SessionId:&lt;br&gt;&lt;/span&gt;&lt;/font&gt;&lt;span&gt;&lt;font face=&quot;Courier New&quot;&gt;fSILRDre2SLzpcvLANBqeqreWATEkVed&lt;/font&gt;&lt;/span&gt;&lt;font face=&quot;Courier New&quot;&gt;&lt;span&gt;&lt;br&gt;&lt;/span&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="340" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="125" value="&lt;font face=&quot;Courier New&quot;&gt;SignedHeaders:&lt;br&gt;&lt;span&gt;authenticationsessionid;clientid;&lt;br&gt;&lt;/span&gt;instant;signedheaders&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="10" y="440" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="126" value="&lt;font face=&quot;Courier New&quot;&gt;SignedHeaders:&lt;br&gt;&lt;span&gt;clientid;deviceid;instant;&lt;br&gt;signedheaders&lt;/span&gt;&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="440" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="127" value="&lt;font face=&quot;Courier New&quot;&gt;SignedHeaders:&lt;br&gt;clientid;deviceid;instant;&lt;br&gt;sessionid;signedheaders&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="440" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="128" value="base headers (required on every request, even on unauthenticated ones)" style="rounded=0;whiteSpace=wrap;html=1;perimeterSpacing=0;" parent="1" vertex="1">
+                    <mxGeometry x="10" y="250" width="800" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="129" value="authentication credentials for the scheme (besides the secret request signing key)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="10" y="320" width="800" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="130" value="specifying which headers are part of the request signature (so the server can check the signature)&lt;font face=&quot;Courier New&quot;&gt;&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="10" y="420" width="800" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="131" value="&lt;font face=&quot;Courier New&quot;&gt;Authorization: AuthenticationSessionSignatureV1&lt;br&gt;&lt;span&gt;IxwagmnxN4QS9icGc0T6BR1QZCO7Ysyg…&lt;/span&gt;&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="10" y="540" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="132" value="&lt;font face=&quot;Courier New&quot;&gt;Authorization:&lt;br&gt;DeviceSignatureV1&lt;br&gt;&lt;span&gt;K7MbwV8Bt5MCVTuEqnG3nT2XmZ8PaVb36…&lt;/span&gt;&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="540" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="133" value="&lt;font face=&quot;Courier New&quot;&gt;Authorization:&lt;br&gt;SessionSignatureV1&lt;br&gt;&lt;span&gt;gJryu1NpaKzxkHfKk2LLJjuhFWM0yinB…&lt;/span&gt;&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="540" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="134" value="authorization header containing the authentication scheme and the request signature encoded as a Base64 string&lt;font face=&quot;Courier New&quot;&gt;&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="10" y="520" width="800" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="135" value="Required headers for the authentication schemes" style="swimlane;rounded=0;startSize=20;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry y="220" width="820" height="400" as="geometry"/>
+                </mxCell>
+                <mxCell id="138" value="&lt;font face=&quot;Courier New&quot;&gt;&lt;span&gt;ClientId: Diplomatiq/DiplomatiqFrontend/1.0.0&lt;br&gt;Instant: 2020-06-21T12:34:56.789Z&lt;br&gt;&lt;/span&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="135">
+                    <mxGeometry x="10" y="50" width="800" height="40" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

@@ -1,0 +1,107 @@
+<mxfile host="localhost" modified="2020-05-17T10:26:43.451Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.45.0 Chrome/78.0.3904.130 Electron/7.2.4 Safari/537.36" etag="xiMeg8Ri0EaGPkF5ofkR" version="13.0.9">
+    <diagram id="Sttl8mKHboSlKdve3zSI" name="Page-1">
+        <mxGraphModel dx="735" dy="681" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="81" value="&lt;b&gt;ivLength&lt;/b&gt;&lt;br&gt;initialization vector length&lt;br&gt;&lt;i&gt;1 byte&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;horizontal=0;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="120" width="60" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="82" value="&lt;b&gt;aadLength&lt;/b&gt;&lt;br&gt;additional authenticated data length&lt;br&gt;&lt;i&gt;4 bytes (big-endian)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;horizontal=1;" vertex="1" parent="1">
+                    <mxGeometry x="180" y="120" width="240" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="83" value="&lt;b&gt;ciphertextLength&lt;/b&gt;&lt;br&gt;ciphertext length&lt;br&gt;&lt;i&gt;4 bytes (big-endian)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;horizontal=1;" vertex="1" parent="1">
+                    <mxGeometry x="420" y="120" width="240" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="84" value="&lt;b&gt;tagLength&lt;/b&gt;&lt;br&gt;authentication tag length&lt;br&gt;&lt;i&gt;1 byte&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;horizontal=0;" vertex="1" parent="1">
+                    <mxGeometry x="660" y="120" width="60" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="85" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;1 byte&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="100" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="96" value="&lt;b&gt;initializationVector&lt;/b&gt;&lt;br&gt;the initialization vector&lt;br&gt;&lt;i&gt;ivLength bytes&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;horizontal=0;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="320" width="80" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="106" value="&lt;b&gt;aad&lt;/b&gt;&lt;br&gt;the additional authenticated data&lt;br&gt;&lt;i&gt;aadLength bytes&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;horizontal=1;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="320" width="220" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="107" value="&lt;b&gt;ciphertext&lt;/b&gt;&lt;br&gt;the ciphertext&lt;br&gt;&lt;i&gt;ciphertextLength bytes&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;horizontal=1;" vertex="1" parent="1">
+                    <mxGeometry x="419" y="320" width="221" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="108" value="&lt;b&gt;authenticationTag&lt;/b&gt;&lt;br&gt;the authentication tag&lt;br&gt;&lt;i&gt;tagLength bytes&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;horizontal=0;" vertex="1" parent="1">
+                    <mxGeometry x="640" y="320" width="80" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="111" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;1 byte&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="180" y="100" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="112" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;1 byte&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="240" y="100" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="113" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;1 byte&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="100" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="114" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;1 byte&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="360" y="100" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="115" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;1 byte&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="420" y="100" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="116" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;1 byte&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="480" y="100" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="117" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;1 byte&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="540" y="100" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="118" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;1 byte&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="600" y="100" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="119" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;1 byte&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="660" y="100" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="120" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;(ivLength + aadLength + ciphertextLength + tagLength) bytes&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="300" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="121" value="&lt;b&gt;HEADER&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;horizontal=0;" vertex="1" parent="1">
+                    <mxGeometry x="80" y="100" width="30" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="122" value="&lt;b&gt;BODY&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;horizontal=0;" vertex="1" parent="1">
+                    <mxGeometry x="80" y="300" width="30" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="125" value="" style="shape=curlyBracket;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="100" width="20" height="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="126" value="" style="group;container=1;" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="80" y="530" width="640" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="123" value="&lt;b&gt;HEADER&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;horizontal=1;" vertex="1" parent="126">
+                    <mxGeometry width="80" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="124" value="&lt;b&gt;BODY&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;horizontal=1;" vertex="1" parent="126">
+                    <mxGeometry x="80" width="560" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="128" value="" style="endArrow=classic;html=1;exitX=0.1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="125">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="40" y="290" as="sourcePoint"/>
+                        <mxPoint x="70" y="540" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="30" y="290"/>
+                            <mxPoint x="30" y="540"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="130" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;10 bytes&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="80" y="510" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="131" value="&lt;font style=&quot;line-height: 100% ; font-size: 10px&quot;&gt;(ivLength + aadLength + ciphertextLength + tagLength) bytes&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+                    <mxGeometry x="160" y="510" width="560" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="132" value="" style="shape=curlyBracket;whiteSpace=wrap;html=1;rounded=1;direction=north;" vertex="1" parent="1">
+                    <mxGeometry x="80" y="570" width="640" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="133" value="&lt;b&gt;DiplomatiqAEAD&lt;/b&gt;&lt;br&gt;structure serialized to bytes" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="250" y="595" width="300" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

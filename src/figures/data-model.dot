@@ -1,0 +1,105 @@
+digraph Neo {
+  rankdir = LR
+  ratio = 0.5
+  node [
+    fontsize = "12"
+    shape = "Mrecord"
+    fontname = "Noto Sans"
+    penwidth = 0.5
+  ]
+  edge [
+    fontname = "Noto Sans"
+    fontsize = "12"
+    penwidth = 0.5
+    labeldistance = 1.5
+  ]
+
+  AuthenticationSession
+  AuthenticationSession -> AuthenticationSessionMultiFactorElevationRequest [
+    label = "HAS_ELEVATION_REQUEST"
+    headlabel = "1"
+    taillabel = "*"
+  ]
+
+  AuthenticationSessionMultiFactorElevationRequest
+
+  Committee
+  Committee -> CommitteeSeat [
+    label = "HAS_PLACE"
+    headlabel = "1"
+    taillabel = "+"
+  ]
+
+  CommitteeSeat
+
+  Conference
+  Conference -> Committee [
+    label = "HAS_COMMITTEE"
+    headlabel = "1"
+    taillabel = "+"
+  ]
+
+  Session
+  Session -> SessionMultiFactorElevationRequest [
+    label = "HAS_ELEVATION_REQUEST"
+    headlabel = "1"
+    taillabel = "*"
+  ]
+
+  SessionMultiFactorElevationRequest
+
+  UserAuthentication
+  UserAuthentication -> UserTemporarySRPData [
+    label = "IS_CURRENTLY_AUTHENTICATING_WITH_SRP_DATA"
+    headlabel = "1"
+    taillabel = "*"
+  ]
+  UserAuthentication -> AuthenticationSession [
+    label = "HAS_AUTHENTICATION_SESSION"
+    headlabel = "1"
+    taillabel = "*"
+  ]
+  UserAuthentication -> UserAuthenticationResetRequest [
+    label = "HAS_RESET_REQUESTED"
+    headlabel = "1"
+    taillabel = "*"
+  ]
+
+  UserAuthenticationResetRequest
+
+  UserDevice
+  UserDevice -> Session [
+    label = "HAS_SESSION"
+    headlabel = "1"
+    taillabel = "1"
+  ]
+
+  UserIdentity
+  UserIdentity -> UserAuthentication [
+    label = "AUTHENTICATES_WITH"
+    headlabel = "1"
+    taillabel = "+"
+  ]
+  UserIdentity -> UserDevice [
+    label = "USES_DIPLOMATIQ_ON"
+    headlabel = "1"
+    taillabel = "*"
+  ]
+  UserIdentity -> Conference [
+    label = "ORGANIZES"
+    headlabel = "1"
+    taillabel = "*"
+  ]
+  UserIdentity -> Conference [
+    label = "PARTICIPATES"
+    headlabel = "*"
+    taillabel = "*"
+  ]
+  UserIdentity -> CommitteeSeat [
+    label = "REPRESENTS"
+    headlabel = "1"
+    taillabel = "*"
+  ]
+
+  UserTemporarySRPData
+}

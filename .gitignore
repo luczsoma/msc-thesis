@@ -1,0 +1,11 @@
+*~
+\#*\#
+auto-save-list
+auto/
+tramp
+.\#*
+
+out/
+pdf/
+/*.txss
+.DS_Store
