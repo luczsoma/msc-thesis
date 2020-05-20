@@ -3,8 +3,52 @@
 
 \section{Context}
 
+Diplomacy is the art and practice of conducting negotiations between nations and nationwide entities~\cite{diplomacymerriamwebster}. It is a complex system, where involved parties like governments and NGOs\footnote{non-governmental organizations} engage in formal discussions, aspiring to \emph{peacefully} influence the status quo of international relations along their interests. Parties are represented by selected, often professionally trained career diplomats, forming a diplomatic delegation.
+
+Besides diplomacy, there are other tools for leveraging international relations. This set of tools, tactics and strategies is collectively known as foreign policy, and is usually directed by political leaders~\cite{foreignpolicybritannica}. Foreign policy is often collated with diplomacy as a synonym, but the two are not identical. Diplomacy is a key instrument of foreign policy, and foreign policy is a superset of diplomacy. In order to achieve the objectives of a nation, tools of foreign policy can include espionage, threats, sabotages, wars, and other means of violence, as well as diplomacy.
+
+Throughout this thesis, I consider diplomacy as the nonviolent elements of foreign policy: the system, methods and infrastructure of governments and NGOs peacefully interacting with each other, in order to influence international relations along their own objectives. Although most diplomacy materializes in confidence between parties, this thesis exists in the context of publicly conducted diplomacy, more narrowly in the context of the United Nations (UN), which — having 193 sovereign member states — is the largest intergovernmental organization in the world~\cite{unmembers}.
+
+Being a powerful diplomat requires experience in various fields. Diplomats need strong organizational and leadership skills, as well as proficiency in written and oral communication for efficient negotiations. They must be able to stay rational and decisive in stressful situations, besides the capacity to quickly process and integrate information into their decisions~\cite{fsicapabilities}. These skills can be developed in specialized educational institutes, usually offering graduate programs~\cite{usdoddiplomattrainings}.
+
+Apart from professional programs designed to train already graduated career diplomats, there are other ways to gain diplomatic experience. One of these is taking part in academic simulations of the United Nations' everyday work. For high school and university students, the Model United Nations (MUN) framework\footnote{The concept of Model United Nations is detailed in \Cref{section:munframework}.} offers hundreds of independent conferences annually, worldwide~\cite{mymunconferencelist}. On these few-day-long events, participants become diplomatic delegates. They are placed in UN committees and assigned countries to represent. Assignments are published in advance, along with the topics the committees will discuss. This enables delegates to perform research and develop their positions before the conference, usually staying true to the actual position of their represented country. During the conference, delegates discuss their positions in the committees, conforming to the formalities of the real-world United Nations, like western business attire and the method of moderated formal debate. By the end of the conference, each committee produces a formal, UN-like \emph{resolution}: a document summarizing the results of their debate and formulating measures for resolving the international issues presented to the committee.
+
 \section{Problem statement and requirements}
+
+Since even a medium-sized conference welcomes hundreds of international students, who need housing, meals, conference accessories like badges and placards, topics to debate, merchandise, and afterwork entertainment, an MUN conference is a heavy organizational burden, requiring months of preparation. Most conferences are driven, prepared, implemented, and executed by voluntary, unpaid students of an educational institution — a high school or a university —, as an extracurricular activity, with additional help of their teachers. Professional event planners, IT and data administrators or other experts are usually not involved. Also, the staff rotates relatively fast as organizing students graduate and leave the institution, making it harder to reuse last year's experience.
+
+Although in general conferences are self-sustaining by making use of participation fees, the execution quality of the event depends on the creativity, enthusiasm, and personal experience of the students at the top of the organizational hierarchy, rather than a solid financial basis. This results in the lack of ability to build modern, automated organizational tools, which ultimately causes data management to be cumbersome and insecure — even though the major part of the organizational work is indeed data management and batch processing. A software system offered as a rationally priced service, tailored to the administrative needs of MUN conferences could greatly reduce this organizational burden by providing easy-to-use data management features.
+
+Aside from the organizational concerns, MUN conferences provide outstanding networking opportunities to both the participants and the organizers. Participants working themselves towards a diplomatic career can substantially benefit from building global acquaintances among their future colleagues. Experienced career diplomats attending MUN conferences as guests can open doors for prospective diplomats which no education can. Professional networking among future and current diplomats can be supported and facilitated well by a suitable software system.
+
+Inspecting current solutions, there is no software system on the internet, which solves the administrative problems of MUN conferences, while making use of the great networking potential of the MUN framework. Implementing such a system would appreciably further global diplomacy in the long run.
 
 \section{Objectives and contributions}
 
+In this thesis I present \emph{Diplomatiq}, a social network software system for diplomats, suitable for organizing MUN conferences. On the one hand, I will refer as \emph{Diplomatiq} to the software system itself, and on the other hand, to the prospective company conducting the maintenance, marketing and sales operations of the software system. Outside the context of this thesis, the social network is the first step of a long-term plan involving global consumption of public data, for producing real-time diplomatic prognoses and analyses.
+
+My first objective was to design and implement Diplomatiq on a solid, production-grade foundation, with a minimal feature set, which can be extended with further social networking, administrative, and real-time data analytics capabilities as needed. Considering the sensitive personal information stored in the system, the prospective applications of Diplomatiq, and my deep interest in cryptography and computer security, my second objective was to build the system upon a modern, layered security architecture, which provides cryptographic assurances in terms of application and data security.
+
+My contributions include the following:
+
+\begin{itemize}
+\item I designed, built, secured and paid a company-level production infrastructure for the development, publication and maintenance of Diplomatiq, including several kinds of supportive infrastructure.
+\item I designed, implemented and published the Diplomatiq social network software system as a client-server application, using graph database technologies.
+\item I developed several supportive libraries outside the Diplomatiq software along the way. I published the built artefacts with documentation of these libraries for free use in the open-source community.
+\item I published the source code of all my contributions as separate open-source projects, centralized under one project organization, called Diplomatiq.
+\end{itemize}
+
 \section{Structure of this thesis}
+
+The thesis is structured as follows.
+
+\begin{itemize}
+\item \emph{\Cref{chapter:preliminaries}} summarizes the preliminary knowledge needed for a high-level understanding of this thesis. It details the concept of Model United Nations and my personal experience with MUN. It also defines the idea of a social network. Then it introduces graph database technologies, focusing on the property graph data model and the Neo4j graph database.
+\item \emph{\Cref{chapter:relatedwork}} gives examples for domain-specific social networks, and presents existing software solutions for the MUN community.
+\item \emph{\Cref{chapter:infrastructure}} describes my approach of building and securing a production-grade infrastructure supporting the development and public operation of Diplomatiq, the social network.
+\item \emph{\Cref{chapter:libraries}} gives an overview about the produced supportive libraries. It unfolds the reasons of their existence, as well as their features and implementation details.
+\item \emph{\Cref{chapter:diplomatiq}} demonstrates the Diplomatiq social network application. It discloses the chosen technologies and architecture, its features and development methods, and implementation details.
+\item \emph{\Cref{chapter:security}} reveals the applied cryptographic and other security measures I built into Diplomatiq, in order to protect user and system data from unauthorized access, from the API to the database level.
+\item \emph{\Cref{chapter:business}} gives a brief insight into the business considerations of Diplomatiq.
+\item \emph{\Cref{chapter:conclusion}} concludes the thesis and presents possible future directions.
+\end{itemize}
