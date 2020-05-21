@@ -1,16 +1,75 @@
 \chapter{Preliminaries}
 \label{chapter:preliminaries}
 
+This chapter summarizes the preliminary knowledge needed for a high-level understanding of this thesis. It details the concept of Model United Nations and my personal experience with MUN. It also defines the idea of a social network. Then it introduces graph database technologies, focusing on the property graph data model and the Neo4j graph database.
+
 \section{The Model United Nations framework}
 \label{section:munframework}
 
 \subsection{Introduction}
+
+The Model United Nations (MUN) framework is an academic simulation of the everyday operation of the United Nations (UN). It is typically an extra-curricular activity materializing as annual, few-day-long conferences organized by students of high schools or universities. Participants welcomed from all over the world take on the roles of assigned nations' UN delegates, forming diplomatic delegations with their peers. There are hundreds of such conferences taking place every year~\cite{mymunconferencelist}. While a medium-size conference has a few hundreds of participants and another few hundreds of organizers, the current largest Model UN conference — The Hague International Model United Nations (THIMUN) — attracts over 3,200 students from around 200 schools, from more than 100 different countries~\cite{thimunabout}.
+
+Delegates are placed in UN-like committees, where they discuss topics related to international issues and conflicts by the methods of moderated formal debate. The conduct of the debates and the conference is specified in the \emph{Rules of Procedure}, a conference-specific, formal regulation derived from a similar document of the United Nations~\cite{unmunrop}. The result of the debate is a UN-like \emph{resolution}: a formal document expressing the opinion or will of a committee. Resolutions are generally recommendations, but in some cases, like in case of a resolution adopted by the Security Council — the UN body with \textquote{primary responsibility for the maintenance of international peace and security}~\cite{uncharter} — the adopted resolution is legally binding for all member states. Although MUN resolutions are of course never legally binding, larger MUN conferences like THIMUN forward their adopted resolutions to the UN. These forwarded MUN resolutions are occasionally formulated into real-world UN resolutions after further debate and amendments.
+
+The committee assignments are known in advance, which enables delegates to perform research and develop their positions before the conference. Students usually build their stances upon the actual standpoints of the countries they represent, but this is not a requirement. Since usually all positions of a given country's diplomatic delegation is assigned to students arriving from the same school, delegates representing the same country can construct complex nationwide strategies across different committees by cooperating with each other in advance.
+
+The larger a conference is, the more possibilities it has regarding the simulation of the actual workings of the UN, or — as the community reinvents itself — even other intergovernmental bodies, like subsidiary bodies of the European Union. Even though the UN has only 193 member states~\cite{unmembers}, simulating the whole operation of the six main organs\footnote{The six main organs of the UN are: the General Assembly with several subsidiary boards, commissions, committees, councils, panels, working groups and others~\cite{gasubsidiaries}; the Security Council; the Economic and Social Council; the Trusteeship Council; the International Court of Justice; and the Secretariat~\cite{unmainorgans}.}, and the Secretariat of the UN requires much more participants.
+
 \subsection{History}
-\subsection{Academic aspects}
-\subsection{Real-world results of the framework}
-\subsection{Social networking within Model United Nations}
+
+The history of Model United Nations dates back to the early 20\textsuperscript{th} century. The first similar event is believed to be held in November 1921 by the Oxford International Assembly~\cite{historyofthefirstmun}. It was based on the operation of the League of Nations, the first worldwide intergovernmental organization founded by the Allied powers after the First World War to maintain world peace. Although the League of Nations was formally disbanded in 1946 and its powers were transferred to the United Nations established in 1945, the organization marks an important milestone of intergovernmental cooperation~\cite{leagueofnationsbritannica}.
+
+The first well-documented Model League of Nations conference was organized by the Harvard International Assembly in 1923. It featured the same basic characteristics that modern MUN conferences have: organized by an academic institution, moderated formal debate about international conflicts in committees, and resolutions adopted as the result of the work conducted on the conference~\cite{historyofthefirstmun}.
+
+The era of Model United Nations started in the 1950s with the establishment of the first high school MUN, Berkeley Model United Nations in 1952, and two other MUNs founded by Harvard University: Harvard Model United Nations in 1953 and Harvard National Model United Nations in 1954. The founding of The Hague International Model United Nations in 1968 led to the global expansion of high school MUN conferences~\cite{top10eventsofmun}. THIMUN was the first MUN in Europe, and is today's largest MUN conference~\cite{thimunabout}. In 1991, the Harvard WorldMUN, a university level MUN rapidly accelerated the spread of university-level MUN. In 2007, the actuation of the BestDelegate.com portal significantly increased the online existence of MUN, providing research and preparatory resources for delegates attending MUN conferences. Founding of MyMUN, an MUN-specific registration and administration system, and MUNPlanet\footnote{At the time of writing this thesis, the website of MUNPlanet~\cite{munplanetwebsite} is not reachable, and its Facebook page~\cite{munplanetfacebook} having more than 150,000 followers received its last update in June 2019.}, an MUN-specific social and knowledge-sharing network furthered the presence of Model United Nations on the internet~\cite{top10eventsofmun}.
+
+\subsection{MUN in numbers}
+
+I have not found any databases, publications, or studies, which would yield satisfactory statistics about Model United Nations. However, according to several portals, websites and Facebook-pages, we can make assumptions about the worldwide spread of MUN.
+
+\subsubsection{Conferences}
+
+At the time of writing this thesis, MyMUN lists 2,457 conferences from December 2012 until today~\cite{mymunconferencelist}. Calculating with roughly 8 years, and with the broad simplification that there were an equal number of conferences organized every year, there are annually more than 300 conferences worldwide, at least based on solely the data of MyMUN. Considering that MyMUN covers only a small fraction of all MUNs in the world, the number of annual MUN conferences likely goes well into the order of thousands.
+
+\subsubsection{Participants}
+
+MyMUN claims having over 100,000 members~\cite{mymunwebsite}. The Facebook page of MUNPlanet~\cite{munplanetfacebook} has over 150,000 followers. According to a 2007 calculation~\cite{howbigismun}, there are 180,000 MUN participants in the United States only. Considering MUN's constantly increasing popularity, I would compose the bold assumption that millions of distinct students attend Model United Nations conferences every year. Although the reputation of MUN increases steadily, the community grows and shrinks at the same time. While new students join, older students leave the collective in favor of real-world diplomacy, or pursuing a different career.
+
+\subsection{Networking within Model United Nations}
+
+MUN conferences offer a number of networking opportunities. Professionally speaking, delegates attend committee sessions, where they debate international issues, cooperate in producing resolutions, and leverage simulated international relations along their represented countries best interests. Therefore the main contact point amongst them is work: they get to know fellow delegates by observing their leadership, public speaking, and negotiation skills in a competitive field. Committee and lunch breaks enable them to further their acquaintances during the day either professionally or personally.
+
+Professional diplomats attending conferences as guests can also take part in committee sessions as observers, or as actual delegates or chairpersons, but they are more likely to attend the official ceremonies or soirées\footnote{elegant evening party, usually with dinner and drinks}. This way, delegates can interact with professional diplomats without unnecessary formalities of real-world diplomacy. Career diplomats are renowned to have appreciable social skills~\cite{fsicapabilities}, which in this setting helps further loosing the mood, and leads to fruitful conversations between generations.
+
+Besides professional programs like debate sessions and official ceremonies, conferences provide a number of other opportunities for delegates to get acquainted with each other. Events like organized sightseeing and afterwork parties allows building informal bounds as well as professional ones.
+
+Besides maintaining virtual friendships, members of the MUN community often harmonize their conference participations to meet with their foreign acquaintances. Since there is no suitable networking platform for this scenario, participants from different countries usually keep connected and communicate via general social networks, like Facebook. Due to the lack of Facebook's MUN-specific capabilities, a large part of the networking effect is lost, as delegates are not given automated suggestions on which conferences to attend based neither on their circle of friends, nor their previous Model UN experience.
+
 \subsection{Administration of a Model United Nations conference}
+
+The general administration of a conference can be divided to two distinct parts. The \emph{professional division} involves administrative tasks related to the Model United Nations framework itself: composing the discussed topics, assigning countries and committees to members of delegations, conducting the actual debates and formal ceremonies, and every other features associated with diplomacy. The professional division encompasses everything inside the simulation, where the participants are in their diplomatic roles. The \emph{organizational division} covers the real-world event outside the simulation: travel and hotel assignments, meals, conference accessories, merchandise, entertainment, etc. According to my personal organizational experience to be detailed in \Cref{section:personalexperience}, the two divisions are separate responsibilities requiring comletely different experience, and thus best to be kept as isolated as possible.
+
+Similarly to the United Nations, the chief administrative officer of an MUN conference is usually the \emph{Secretary-General}, responsible for organizing, administering and conducting the conference. In case of the aforementioned two-division administrative approach, the Secretary-General is responsible only for the professional division of the conference, and reports to the \emph{Conference Manager} or \emph{Project Manager}, who leads the organizational division, and is responsible for the entire conference. Hereafter I will refer to the organizational and professional divisions together as management. In the following sections I will detail the procedure of organizing a medium-size, high school-level MUN conference with the two-division administrative approach, broken down to distinct, preemptive phases.
+
+\subsubsection{Preliminary arrangements}
+
+After the management of the previous year's session agreed upon their successors, the new management starts negotiations with the headmaster of the organizing school. They settle the dates for the conference, discuss necessary resources the school can provide, and start securing external locations for conference ceremonies which the school cannot host.
+
+After the initial negotiations, the management announces the conference's subsequent session in the host school with its date and vacancies in the organizational structure, and starts coordinating interviews with eventual applicants.
+
+\subsubsection{Registration}
+
+After the professional division agreed on the UN bodies to be simulated, they publish preliminary committee assignments with high-level topics on the conference's website. The management opens the registration of participants, then delegations and individual delegates apply to the conference specifying their preferences regarding country and committee assignments. Usually a delegation is accompanied by a couple of teachers employed by the applicants' school, and the teachers are recorded into the registration system as well as the students.
+
+The registration procedure comes with significant paperwork. The management consisting of junior members usually lack the experience and resources for efficiently and securely managing sensitive personal information of hundreds or thousands of applicants, and the school's IT infrastructure is not prepared for such custom development either. Thus it is common that the registration is implemented with a simple online form populating spreadsheets, or a primitive in-house application often making data management more complex. Ready-to-use software like MyMUN are often not customizable enough to be useful for conferences generally requiring somewhat tailored solutions, which leads to the usage of multiple different applications. This can cause more pain than gain by requiring manual data maintenance in unintegrated systems.
+
+\subsubsection{Finalizing country and committee assignments}
+
+\subsubsection{Country and committee assignments}
+
 \subsection{Personal experience: Budapest International Model United Nations}
+\label{section:personalexperience}
 
 \section{Social networks}
 
@@ -18,5 +77,3 @@
 \subsection{The property graph data model}
 \subsection{Neo4j}
 \subsection{Cypher}
-
-\section{Running example}
