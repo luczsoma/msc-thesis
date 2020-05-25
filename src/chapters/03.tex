@@ -1,13 +1,119 @@
 \chapter{Related work}
 \label{chapter:relatedwork}
 
-\section{Domain-specific social networks}
-\subsection{LinkedIn}
-\subsection{DeviantArt}
-\subsection{MeetUp}
+This chapter gives examples for domain-specific social networks, and presents existing software solutions for the MUN community.
 
-\section{Best Delegate}
+\section{Examples for domain-specific social networks}
+
+As previously described in \Cref{chapter:preliminaries}, this thesis regards domain-specific social networks as networks having a determined target audience, offering specialized features for members of the target audience in line with specific goals of usage in a given domain. Real-world examples for domain-specific social networks include LinkedIn~\cite{about-linkedin}, DeviantArt~\cite{about-deviantart}, and Diplomatiq~\cite{diplomatiq-app}.
+
+LinkedIn is an employment-oriented social network, facilitating professional networking: a connection between profiles usually represent real-world professional relationships. Having nearly 690 million registered members~\cite{about-linkedin}, it is the largest network of its kind. LinkedIn is a domain-specific network: its domain is human resources and employment, and its main target audience is job seekers and employers or recruiters. Besides general social network features like content sharing and messaging, job seekers can create professional profiles similar to a curriculum vitae, find jobs by specific criteria, and apply to job opportunities on the platform. Employers can list job opportunities on LinkedIn, while recruiters can interact with job applicants in the form of formalized or personalized messages. One interesting feature of LinkedIn's social network is \emph{endorsements}: people can positively endorse each other's skills, allowing recruiters to select applicants based on community-approved claims, besides their education, previous work experience, and personally listed skills. LinkedIn's revenue is primarily based on a subscription model for its premium recruiting tool, which allows recruiters to access additional data about job seekers otherwise not available on the platform~\cite{linkedin-business-model}. Apart from its recruiting tool, LinkedIn generates revenue from personalized advertisement as well.
+
+DeviantArt is a domain-specific social network for sharing several kinds of artwork. Its domain is art and its target audience is artists and art lovers. Its features support sharing artwork of traditional and digital drawing and painting, photography, literature, filmmaking, among others. DeviantArt has over 45 million monthly unique visitors~\cite{about-deviantart}. It generates its revenue by advertising, offering subscription-based memberships, brand partnerships, and producing prints for artwork published on the platform~\cite{deviantart-revenue}.
 
 \section{MyMUN}
+\label{section:mymun}
+
+\subsection{Introduction}
+
+MyMUN is a domain-specific social network, claiming to be \textquote{the ultimate MUN database, conference management tool, and social network}~\cite{mymunwebsite}. In the short run, it is a potential competitor of Diplomatiq\footnote{Diplomatiq will outgrow the world of Model United Nations in the long run, which means it cannot be collated with MyMUN, as the two services will operate over different domains.}. Its domain is Model United Nations, its target audience is organizers and participants of MUN conferences, and it provides functionality both for organizing an MUN conference, and for preparing to one as a participant delegate.
+
+MyMUN's website does not contain detailed company data, but according to other sources, the company was founded in 2014~\cite{mymunfacebook} and seems to be an established startup, based on its 17 employees and \$3 million of annual revenue~\cite{mymunzoominfo}. From this point forward, every information disclosed in \Cref{section:mymun} originates from my personal experience of using MyMUN via its website~\cite{mymunwebsite}, therefore I disregard references until the end of this section.
+
+\subsection{Organizational features}
+
+The platform offers a number of features for making the conference organization easier. However, having tried out the software in several different scenario, I experienced the application to frequently produce failures regarding even its basic functionality\footnote{As the website does not list any means of contact for feedbacks about the software, and I did not find any possibility of contributing to the closed-source MyMUN project, I have contacted the Chief Technology Officer via email, with a list of experienced failures and detailed reproduction steps.}.
+
+\subsubsection{Registering an MUN society and a conference}
+
+In MyMUN, the first step of organizing an MUN conference is to register an organization, called \textquote{MUN society}. The user registering the MUN society becomes the sole administrator of the organization, and the only administrator of all MUN conferences hosted by the organization. Even though further organizer members can be invited to administer a conference, but no access control is offered by the platform: invited organizers have the same permissions as an administrator. Since MUN organizational staff usually rotates quickly, and transferring the ownership of an MUN society or conference is not possible on MyMUN, this approach is not suitable for conferences hosting sessions over the course of multiple years.
+
+An MUN society can host multiple \emph{conferences}. For registering a conference in the system, the user needs to supply the conference's name (e.g. Budapest International Model United Nations) and codename (e.g. BIMUN), number of expected delegates on a session, contact information, and the start and end dates of the conference. Sadly, the platform does not allow the conference to have \emph{sessions} as child entities, which means that a new conference entity needs to be registered for sessions of the same conference in different years. This excludes the possibility of e.g. tracking participants' performance on the same conference over different sessions, because there is no entity in the data model to connect the different sessions stored as separate conference instances. After submitting the necessary information, the conference gets immediately listed in the Discover section, allowing delegates and other participants to apply.
+
+\subsubsection{Conference application procedure}
+
+MyMUN offers various settings for the application procedure. Additional application data can be queried from applicants in the form of short text, long text, numeric, multiple choice, checkbox or file inputs. The organizers can manage the application of individual delegates, delegations, committee chairpersons, observers, and faculty advisors. The platform does not offer creating and managing custom roles beyond the previously listed ones, but each role's application deadlines and additional questions can be adjusted separately. Even though applications can be accepted or rejected, the system does not offer an automated way to accept or reject applications with regards to the best combination of applicants and country-committee assignments based on priorities. In MyMUN, a participant's application is either accepted or rejected, and the question of the applicant's country-committee assignment is addressed in a later organizational phase.
+
+\subsubsection{Committee and country assignments}
+
+The platform uses the term \emph{Country Matrix} for denoting a matrix having committees on the X axis, and countries (committee seats) on the Y axis\footnote{The term \emph{country matrix} is not specific to MyMUN, it is a common term in the MUN scene.}. In the Country Matrix, organizers can assign accepted applicants to seats, or accepted applicant delegations to country delegations, if their sizes allow. The \emph{Assignment Wizard} provides an automated way to assign committee seats to most of the delegates and delegations based on their preferences provided at the application, but the wizard cannot be configured to take into account additional priorities or restrictions. And even if it could, it still operates on the set of already applied participants, disallowing acceptance with regards to the best combination.
+
+\subsubsection{Handling finances}
+
+The financials of conference participation fees can be managed with MyMUN in various ways. Payment settings enable to adjust fees for different payment classes of different kinds of participants separately — delegates, head delegates, committee chairpersons, faculty advisors, and delegations —, but it is not possible to add custom payment classes. Participants can pay individually or in groups, with credit/debit cards, PayPal, or bank transfer, directly through MyMUN. The platform allows to issue refunds as well. Also, promotions and coupons can be offered to participants.
+
+The organizational dashboard details a financial summary with all received and refunded payments broken down to payment classes. The cash flow view shows the financial reserves and the predicted income of the conference. Payment history can be exported with financial identifiers, so accountants of the conference can easily process payments.
+
+\subsubsection{Automated notifications and reminders}
+
+Relevant events of the application process are confirmed via automated email notifications. The confirmed events are the submission of an application, the acceptance or rejection of an application, and the assignment of a committee seat to an accepted applicant. MyMUN offers basic email notification templates for these events, which can be completed with additional HTML or text content in the settings.
+
+\subsubsection{Statistics}
+
+Organizers can create custom views of conference data stored in MyMUN. Custom views can include several metrics based on application type, application status, and other characteristics. Displaying such customized data can help organizers to decide if the conference met predefined numeric goals, e.g. diversity, distribution of genders in committees, etc.
+
+\subsubsection{Advertisement and marketing}
+
+Although most conferences usually have their already established audience\footnote{With proper networking skills and some personal popularity, there is usually no need for significant marketing efforts. It is usual that organizers organically pre-promote their conferences in the MUN community, either in-person on other events, or on social media. On the very first session of BIMUN in 2011, the number of applicants was five times the conference capacity, as organizers put serious efforts into organic marketing among their friends and acquaintances.}, some need more than organic reach only. MyMUN provides a variety of promotional packages for boosting the visibility of an event. Packages include advertising on the platform itself by highlighting the conference on one of the promotional pages, on MyMUN's social media accounts, and through email campaigns. Packages can be optimized, and one can also compose a fully customized marketing campaign of the individual promotional items.
+
+\subsection{Features for participants}
+
+\subsubsection{Listing MUN conferences}
+
+Students can browse among conferences in the \emph{Discover} section of MyMUN. This section consists of several views: the main view is a page highlighting upcoming and featured conferences. Events are categorized by continent, and featured conferences are displayed at the top of the page, and across categories. Besides the highlights view, other views display the conferences on a map, in a calendar, or with a regular list view providing filtering capabilities.
+
+All views allow visitors to apply to displayed conferences. The most complete display of events stored in the system is in the regular list view, where also the most information is displayed of individual conferences at once. Conferences can be ordered by name, date, location, number of delegates, fee, and rating.
+
+\subsubsection{Applying to a conference}
+
+The application procedure starts with checking and modifying one's personal data as required. This step ensures that the application is performed with up-to-date information, in case any personal identifiers or characteristics — e.g. diet or allergies — stored in the system became obsolete. Data saved during this step is also updated globally.
+
+In the second step, the applicant chooses their role on the conference. This can be delegate, member of a delegation, chairperson, faculty advisor or observer. Some of the roles cannot be selected if preliminary conditions are not met, e.g. users with the occupation student cannot apply as a faculty advisor. If the applicant chooses to be a member of a delegation, then they need to supply its name, and then the delegation's head delegate needs to confirm the membership in the system.
+
+The third step lists the terms and conditions of a conference. Having contractual arrangement between conferences and participants is not ordinary, therefore this step is included only if the conference formulated and submitted such documents to MyMUN. If there are any, accepting the conditions is a requirement of the application.
+
+The applicant needs to supply their committee seat preferences in the fourth step, first choosing the committee from the set of the committees offered by the conference, then the represented country within the committee with a search-assisted drop-down menu\footnote{A search-assisted drop-down menu allows users to choose a value from a set, while providing search capabilities in the set.}. The minimum and maximum number of necessary assignment preferences is conference-specific. As described before, the software's \emph{Assignment Wizard} feature claims to assign committee seats to applicants closest to their preferences overall.
+
+Additional conference-specific questions need to be answered in the fifth step. Most conferences ask about applicants' personality, MUN society membership and previous MUN experience. Usually the goal of additional questions is to evaluate an applicant's attitude and commitment. Larger conferences implement sophisticated questionnaire often requiring serious professional background to fully answer.
+
+The sixth step requires the applicant to formulate a motivational letter in which they introduce themselves and describe their personal and professional interest in the conference. The answer's input field supports long text formatting with optional images, links and other kinds of attachments. A separate document acting as the motivational letter itself cannot be uploaded, meaning that applicants need to prepare this document online, although it is automatically saved during editing.
+
+In the seventh and final step applicants can review their application before submission. All steps' information can be separately edited, navigating the process back to the step to be amended. The application procedure can be either finished by submitting the application or aborted by withdrawing the application and deleting all saved data.
+
+\subsubsection{Offers during the application process}
+
+MyMUN offers several kinds of services already during the application process. In a continuously visible separate sidebar, hotel, flight and health insurance offers are shown. Hotels, motels and other housing opportunities are displayed on an interactive map covering the vicinity of the conference, indicating the event's exact location. Selecting a housing option reveals its price and community rating, and the offer can be reserved instantly, after the user was navigated to the housing service provider's website. Besides generic offers, conference-specific contractual housing offers can be displayed in a highlighted manner. Flights and other means of travel are also directly offered to applicants by integrating external service providers into MyMUN. Besides travel, the platform offers conference-specific health insurances as well.
+
+\subsubsection{Research and study guides}
+
+Model United Nations is an academic activity, and thus it involves conducting research before attending a conference. MyMUN offers a virtual library of study guides and position papers\footnote{An MUN position paper summarizes the position of the delegate's country regarding a given topic or issue. Its purpose is to prove the delegate's or delegation's level of preparation before the conference, and to serve as a topical fact sheet during the event.}, which will be extended with a section for drafted resolutions as well. The platform's position paper database counts over 14,000 entries. MyMUN claims that it will also serve online courses on Model United Nations in general, and specifically on preparing to conferences as a delegate.
+
+\subsubsection{Travel services}
+
+MyMUN promotes and cross-sells several kinds of travel services, some in cooperation with conferences. Services include flights, accomodation, health insurance, car rental, and adventure tours. A so-called \emph{group service} offers a package of integrated services tailored to delegations: after receiving all data from the head delegate or a faculty advisor, MyMUN acts as a travel agency, and makes reservations for flights and accomodation, books required travel insurances, and sends a detailed travel offer to the delegation.
+
+\subsection{Business model}
+
+The financial basis of MyMUN lies on paid conference organization features, conference advertisement and marketing, the cross-sales of travel services, and on a three-level subscription-based membership in the \emph{Delegates Club}, a closed circle of MUN participants offering exclusive content, savings and insurance benefits.
+
+\subsubsection{Paid conference organization features}
+
+MyMUN offers two plans for conference organizers. In the free \emph{Trial} plan, basic features are available, like listing a conference on the platform, adding committees and organizers, and the management of chairpersons' application. The Trial plan is not sufficient for assisting in the organization of an MUN conference from the beginning to the end, encouraging organizers to subscribe to the \emph{Professional} plan, which allows to utilize all features of the platform. The Professional plan costs the 4\% the value of each financial transaction actuated through MyMUN's payment system, but minimally €4 per transaction. It is invoiced either directly to delegates, integrated to the online payment procedure of a conference application, or to the conference, if online payments are not available in a given area of operation.
+
+\subsubsection{Conference advertisement and marketing}
+
+As described previously, MyMUN allows organizers to promote their conferences in various ways. The offered packages containing several kinds of promotions are priced between €300 and €3,000. The fee of individual marketing elements — like featuring a conference on chosen landing pages or in email campaigns — vary between €100 and €1,500.
+
+\subsubsection{Cross-sales of travel services}
+
+Although directly not mentioned, fees of offered travel services probably contain dividends received by MyMUN. It is a common sales scheme, when a seller offers a service, and a second party offers a large audience in assumed need of the offered service, in exchange for dividend. MyMUN's offerings — flight tickets, accomodation, health insurance and group services — all provide ways for selling the services with considerable financial benefits.
+
+\subsubsection{Delegate's Club}
+
+The Delegate's Club is a subscription-based membership group within MyMUN, offering three levels of additional services for conference participants. Membership is not a requirement for using the platform for conference applications, but it comes with benefits. The smallest \emph{Bronze} package costs €27 monthly for 6 months: it offers a flatrate for health insurances purchased through MyMUN, and full access to the position paper database. The \emph{Silver} package costs €65 monthly for 1 year, includes all benefits of the Bronze package, and comes with a free ISIC Card\footnote{The ISIC Card is a student ID card, the only one of its kind which is internationally accepted.} offering discounts for hotels, hostels, restaurants and museums. In addition to all benefits of the Silver package, the \emph{Gold} package offers discounted subscription to diplomatic periodicals, and costs €90 per month for a fixed 1-year term.
 
 \section{MunPlanet}
+
+MUNPlanet was an online knowledge network where MUNers create, curate and share their knowledge and experiences about issues of global importance~\cite{munplanetfacebook}. It is a potential competitor of Diplomatiq, being a global, domain-specific social network expanding along Model United Nations. Its domain is Model United Nations, its target audience is all participants of MUN conferences, and its specific features are to facilitate knowledge sharing within the domain.
+
+No further information is available of MUNPlanet, since at the time of writing this thesis, its website~\cite{munplanetwebsite} is not reachable, and its Facebook page~\cite{munplanetfacebook} having more than 150,000 followers received its last update in June 2019.
