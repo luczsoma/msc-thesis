@@ -1,25 +1,76 @@
 \chapter{Building and securing a company-level production infrastructure}
 \label{chapter:infrastructure}
 
-this is the foundation that we can build upon
+This chapter describes my approach of building and securing a production-grade infrastructure supporting the development, testing, and public operation of Diplomatiq.
 
-security will be all over this chapter
+\section{Introduction}
+
+The underlying infrastructure plays a foundational role in the eventual success or failure of every business. 21\textsuperscript{st}-century companies often build their business operations entirely on information technology solutions, meaning a well-founded IT infrastructure is key to succeed. Even though at the time of writing this thesis, Diplomatiq is a company existing only in the future, the infrastructure I elaborate in the present will be the foundation of its business operation. By setting up a robust and secure infrastructure, I want to establish the future of Diplomatiq. It needs to be done right, so it does not need to be done again.
+
+This involves two principles. The first is that key infrastructure elements need to be established using mature and robust solutions, so they do not need to be rebuilt or replaced later. This excludes trial versions of services, expiring student offers, and generally free solutions as well. Organizational hierarchy needs to be set up properly, allowing later expansion, and the infrastructure with all its access credentials should be documented meticulously. The second principle is that security should be taken into consideration from the very beginning. Authentication and authorization policies should be the as strict as possible, and all access credentials should be stored in a safely encrypted manner.
+
+Throughout this chapter, I introduce the various infrastructure elements I evaluated, purchased and integrated into Diplomatiq's infrastructure. Security-related aspects will appear in most sections, but I detail the applied security measures in a dedicated section as well.
 
 \section{Naming}
 
+A good brand name identifies a company in various ways. Apart from marketing purposes, the name should be suifficently unique to be usable within the various services and namespaces on the Internet. For this purpose, \emph{Diplomatiq} seemed to be suitable: it is unique, appropriately short for both domain names~\cite{howtochoosedomainname} and the human memory~\cite{memoryfour} with its 10~characters, and it characterizes its subject well.
+
+I have formulated the following — prioritized — guidelines for reserving namespaces for Diplomatiq across services on the Internet:
+
+\begin{enumerate}
+\item If available, use \emph{Diplomatiq} (capitalized).
+\item Else if the service allows lowercase letters only, use \emph{diplomatiq}.
+\item Else if use \emph{DiplomatiqOrg} (capitalized).
+\item Else if use \emph{diplomatiqorg}.
+\item Else use a custom name.
+\end{enumerate}
+
+As of now, there has been no need to apply the 5\textsuperscript{th} rule.
+
 \section{Brand}
 
-\section{Domain names}
+For visual recognition, a company needs a well-defined image. The corporate identity of Diplomatiq was designed my colleague, Roland Hidvégi. It includes a logotype, three variants of application icons, ten brand colors, and Eina~\cite{eina} as the advised font family\footnote{As Eina is not available as a free web font~\cite{eina-licensing}, I temporarily use Helvetica instead.}. \Cref{fig:diplomatiq-logotype} shows the logotype, and \Cref{fig:diplomatiq-app-icons} shows the three application icon variants.
 
-caa record, emails, security, 2fa, etc
+\begin{figure}[!htb]
+    \centering
+    \vspace{2mm}
+    \includegraphics[width=8cm]{figures/diplomatiq-logo.pdf}
+    \caption{The logotype of Diplomatiq}
+    \label{fig:diplomatiq-logotype}
+\end{figure}
 
-\section{Certificates}
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=8cm]{figures/diplomatiq-app-icons.pdf}
+    \caption{The application icon variants of Diplomatiq}
+    \label{fig:diplomatiq-app-icons}
+\end{figure}
 
-Sectigo, positiveSSL, password-protected, safely stored
+\section{Domain name}
+
+A domain name represents a network domain, or it translates to an Internet Protocol address~\cite{rfc1035}. Having a domain name is necessary for companies with web-facing services, both for users to easily memorize the address of the service, and for deploying security measures, such as Transport Layer Security (TLS)~\cite{rfc8446}. I decided that as Diplomatiq is not primarily a commercial entity, but rather a diplomatic organization, its domain name will be \lstinline{diplomatiq.org}. Since I was already registered at the domain name registrar Namecheap~\cite{namecheap-website}, I have purchased the domain name from them.
+
+I have set up various DNS records for deployed services, which will be detailed later at describing the services themselves. Even though I have a secure, long, cryptographically random password for every account I have — including Namecheap — and I store them in an encrypted password manager, I enabled multi-factor authentication, reducing the possibility of an unauthorized party accessing my account. I also turned on all security alerts to get notified about all events regarding my domain names.
+
+\section{TLS certificates}
+
+TLS is a cryptographic protocol with the goal to provide a secure channel between two communicating parties — usually a client and a server — over the Internet, offering cryptographic assurances for \emph{authentication} (the server is always authenticated, the client is optionally authenticated), \emph{confidentiality} (data sent over the channel is encrypted in-transit) and \emph{integrity} (data sent over the channel cannot be modified without detection)~\cite{rfc8446}. For protecting web application users and API consumers on the Internet, a web server should serve its contents over TLS, e.g. over the HTTPS protocol, which is essentially HTTP over TLS. More and more web browser APIs require websites and web applications to be served over HTTPS~\cite{secure-context-features}.
+
+Authenticating the server involves a digital certificate issued to one or more specific domain names, cryptographically signed by a trusted third party called a Certificate Authority (CA)\footnote{For the sake of compactness, I will not detail the X.509 certificate infrastructure and the underlying public-key cryptography in this thesis.}. Acquiring such a certificate requires proving the ownership of the domain names. \emph{Non-wildcard certificates} only certify domain names they were issued to, whereas \emph{wildcard certificates} certify given domains and all their immediate subdomains.
+
+TLS certificates can be purchased from a multitude of vendors. For \lstinline{diplomatiq.org}, I have purchased a TLS certificate from Sectigo~\cite{sectigo-website}, one of the leading TLS certificate vendors. The certificate is issued to the \lstinline{diplomatiq.org} and \lstinline{www.diplomatiq.org} domain names, and since it is a non-wildcard certificate, I will need to acquire additional certificates for other subdomains.
+
+The certificate is protected with a long, cryptographically random password, and it is stored in a cryptographic Hardware Security Module\footnote{Hardware Security Modules are separate physical computers designed to keep cryptographic keys safe. They offer tamper resistance making it extremely difficult to extract and steal secret keys~\cite{fips-140-3}.} by Microsoft Azure's Key Vault\footnote{Microsoft Azure and its Key Vault service in particular will be detailed later.} service. As an additional safety measure, I have deployed \emph{Certification Authority Authorization (CAA)} DNS records\footnote{CAA records specify those authorized CAs, who can issue certificates for the given domain~\cite{rfc8659}. This is to serve as a CA whitelist, preventing malicious actors to steal data by issuing valid TLS certificates, then acting as an authenticated server.} for \lstinline{diplomatiq.org}, reducing the possibility of someone with malicious intents issuing a TLS certificate for Diplomatiq.
 
 \section{Emails}
 
 DMARC + DKIM + SPF
+
+forwarding from namecheap
+
+Sendgrid
+
+dns records for sendgrid
 
 \section{Source code management}
 
@@ -27,14 +78,23 @@ GitHub organization, 2FA, security settings, etc
 
 continuous integration
 
+domain name verification verification
+
+\section{NPM}
+
+@diplomatiq
+
 \section{CI infrastructure}
 
 \section{Neo4j startup program}
 Enterprise Edition license
 
-\section{Serving the application on the internet}
+\section{Serving the application on the Internet}
 
 \subsection{Choosing the platform}
+
+CAA record!
+
 Azure
 \subsection{Active Directory}
 \subsection{Naming conventions}
@@ -42,6 +102,8 @@ Azure
 \subsection{KeyVault}
 \subsection{Networking}
 \subsection{DB VM}
+
+neo4j dns a record
 
 \section{Infrastructure security}
 \subsection{Identity management}
