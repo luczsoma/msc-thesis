@@ -175,9 +175,14 @@ Since exploiting security vulnerabilities can lead to catastrophic consequences 
 
 \subsection{Development model}
 
-In most of the repositories, I use the
+In most of Diplomatiq's repositories, I use the a modified version of the GitFlow workflow~\cite{gitflow}. In essence, the workflow operates on four types of branches in a repository:
 
-branching model
+\begin{enumerate}
+\item The \emph{master} branch is stable, and should be kept stable at all times. Code gets merged into the master branch only from a \emph{release} branch, immediately before a new version of the software is released into production\footnote{As described later, most Diplomatiq projects are configured in a way that merging a tagged commit into the master branch triggers the continuous delivery flow and deploys the version into production.}. Contributors can not push code directly onto this branch, but administrators can.
+\item The \emph{develop} branch is part of the repository's regular development flow. When creating feature branches, contributors branch from develop, and the target of contributional pull requests is the develop branch. Contributors can not push code directly onto this branch, but administrators can.
+\item The \emph{feature/*} branches are also part of the regular development flow. Contributors develop their contributions on feature branches, regardless of the contribution's type (feature, bugfix, refactor, etc.). Contributional pull requests are created from feature branches targeting develop.
+\item The \emph{release/*} branches are created when a release candidate is being prepared, by branching from develop. Release-related code changes like version bumps, changelog generation and release hotfixes are committed onto the release candidate's release branch, and eventually the finalized release candidate is tagged. After conducting all necessary testing on the release candidate, the release branch is merged into master, then it is immediately released into production by continuous delivery. After the deployment finished, the release branch is merged into develop. Contributors can not push code directly onto release branches, but administrators can.
+\end{enumerate}
 
 branch protection rules
 
@@ -191,13 +196,13 @@ automated changelog generation
 
 \subsection{Automated dependency management}
 
+\section{Continuous integration and continuous delivery}
+
+sonarcloud
+
 \section{NPM}
 
 @diplomatiq
-
-\section{CI infrastructure}
-
-sonarcloud
 
 \section{Means of everyday communication}
 
