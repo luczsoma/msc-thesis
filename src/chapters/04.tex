@@ -9,7 +9,7 @@ The underlying infrastructure plays a foundational role in the eventual success 
 
 This involves two principles. The first is that key infrastructure elements need to be established using mature and robust solutions, so they do not need to be rebuilt or replaced later. This excludes trial versions of services, expiring student offers, and generally free solutions as well. Organizational hierarchy needs to be set up properly, allowing later expansion, and the infrastructure with all its access credentials should be documented meticulously. The second principle is that security should be taken into consideration from the very beginning. Authentication and authorization policies should be the as strict as possible, and all access credentials should be stored in a safely encrypted manner.
 
-Throughout this chapter, I introduce the various infrastructure elements I evaluated, purchased and integrated into Diplomatiq's infrastructure. Security-related aspects will appear in most sections, but I detail the applied security measures in a dedicated section as well.
+Throughout this chapter, I introduce the various infrastructure elements I evaluated, purchased and integrated into Diplomatiq's infrastructure. Security-related aspects will appear in most sections, but I detail further security measures in a dedicated section as well.
 
 \section{Naming}
 
@@ -29,7 +29,7 @@ As of now, there has been no need to apply the 5\textsuperscript{th} rule.
 
 \section{Brand}
 
-For visual recognition, a company needs a well-defined image. The corporate identity of Diplomatiq was designed my colleague, Roland Hidvégi. It includes a logotype, three variants of application icons, ten brand colors, and Eina~\cite{eina} as the advised font family\footnote{As Eina is not available as a free web font~\cite{eina-licensing}, I temporarily use Helvetica instead.}. \Cref{fig:diplomatiq-logotype} shows the logotype, and \Cref{fig:diplomatiq-app-icons} shows the three application icon variants.
+For visual recognition, a company needs a well-defined image. Diplomatiq's corporate identity was designed by one of my acquaintances, Roland Hidvégi. It includes a logotype, three variants of application icons, ten brand colors, and Eina~\cite{eina} as the advised font family\footnote{As Eina is not available as a free web font~\cite{eina-licensing}, I temporarily use Helvetica instead.}. \Cref{fig:diplomatiq-logotype} and \Cref{fig:diplomatiq-app-icons} shows the logotype and the application icon variants.
 
 \begin{figure}[!htb]
     \centering
@@ -48,43 +48,162 @@ For visual recognition, a company needs a well-defined image. The corporate iden
 
 \section{Domain name}
 
-A domain name represents a network domain, or it translates to an Internet Protocol address~\cite{rfc1035}. Having a domain name is necessary for companies with web-facing services, both for users to easily memorize the address of the service, and for deploying security measures, such as Transport Layer Security (TLS)~\cite{rfc8446}. I decided that as Diplomatiq is not primarily a commercial entity, but rather a diplomatic organization, its domain name will be \lstinline{diplomatiq.org}. Since I was already registered at the domain name registrar Namecheap~\cite{namecheap-website}, I have purchased the domain name from them.
+\subsection{Overview and purchasing the domain name}
 
-I have set up various DNS records for deployed services, which will be detailed later at describing the services themselves. Even though I have a secure, long, cryptographically random password for every account I have — including Namecheap — and I store them in an encrypted password manager, I enabled multi-factor authentication, reducing the possibility of an unauthorized party accessing my account. I also turned on all security alerts to get notified about all events regarding my domain names.
+A domain name in the Domain Name System (DNS) represents a network domain, or it translates to an Internet Protocol address~\cite{rfc1035}. Having a domain name is necessary for companies with web-facing services, both for users to easily memorize the address of the service, and for deploying security measures, such as Transport Layer Security (TLS)~\cite{rfc8446}. As Diplomatiq is not primarily a commercial entity, but rather a diplomatic organization, I decided its domain name to be \lstinline{diplomatiq.org}. Since I was already registered at the domain name registrar Namecheap~\cite{namecheap-website}, it was starightforward to purchase the domain name from them, under my existing user account. I have set up various DNS records for deployed services, these will be detailed later at describing the services themselves.
 
-\section{TLS certificates}
+\subsection{Security}
 
-TLS is a cryptographic protocol with the goal to provide a secure channel between two communicating parties — usually a client and a server — over the Internet, offering cryptographic assurances for \emph{authentication} (the server is always authenticated, the client is optionally authenticated), \emph{confidentiality} (data sent over the channel is encrypted in-transit) and \emph{integrity} (data sent over the channel cannot be modified without detection)~\cite{rfc8446}. For protecting web application users and API consumers on the Internet, a web server should serve its contents over TLS, e.g. over the HTTPS protocol, which is essentially HTTP over TLS. More and more web browser APIs require websites and web applications to be served over HTTPS~\cite{secure-context-features}.
+Even though I have a secure, long, cryptographically random password for my Namecheap account — as well as for every other user account I have — and I store it in an encrypted password manager, I enabled multi-factor authentication, to reduce the possibility of an unauthorized party accessing Diplomatiq's DNS infrastructure. I also turned on all security alerts to get immediately notified about all events regarding the domain.
 
-Authenticating the server involves a digital certificate issued to one or more specific domain names, cryptographically signed by a trusted third party called a Certificate Authority (CA)\footnote{For the sake of compactness, I will not detail the X.509 certificate infrastructure and the underlying public-key cryptography in this thesis.}. Acquiring such a certificate requires proving the ownership of the domain names. \emph{Non-wildcard certificates} only certify domain names they were issued to, whereas \emph{wildcard certificates} certify given domains and all their immediate subdomains.
+I deployed DNS Security Extensions (DNSSEC) under the Diplomatiq domain. DNSSEC essentially prevents spoofing DNS data by providing a set of methods to DNS clients to cryptographically authenticate the integrity and existence (or non-existence) of DNS records~\cite{rfc4033}. Although there is a long-standing debate about the usefulness and operational security of DNSSEC~\cite{4159821, ptacek-dnssec-rant-2, ptacek-dnssec-rant-1}, I decided that until it does not cause any failures or outages in production, it will be enabled.
 
-TLS certificates can be purchased from a multitude of vendors. For \lstinline{diplomatiq.org}, I have purchased a TLS certificate from Sectigo~\cite{sectigo-website}, one of the leading TLS certificate vendors. The certificate is issued to the \lstinline{diplomatiq.org} and \lstinline{www.diplomatiq.org} domain names, and since it is a non-wildcard certificate, I will need to acquire additional certificates for other subdomains.
+\section{TLS infrastructure}
 
-The certificate is protected with a long, cryptographically random password, and it is stored in a cryptographic Hardware Security Module\footnote{Hardware Security Modules are separate physical computers designed to keep cryptographic keys safe. They offer tamper resistance making it extremely difficult to extract and steal secret keys~\cite{fips-140-3}.} by Microsoft Azure's Key Vault\footnote{Microsoft Azure and its Key Vault service in particular will be detailed later.} service. As an additional safety measure, I have deployed \emph{Certification Authority Authorization (CAA)} DNS records\footnote{CAA records specify those authorized CAs, who can issue certificates for the given domain~\cite{rfc8659}. This is to serve as a CA whitelist, preventing malicious actors to steal data by issuing valid TLS certificates, then acting as an authenticated server.} for \lstinline{diplomatiq.org}, reducing the possibility of someone with malicious intents issuing a TLS certificate for Diplomatiq.
+\subsection{Overview}
 
-\section{Emails}
+Transport Layer Security (TLS) is a cryptographic protocol with the goal of providing a secure channel between two communicating parties — usually between a client and a server — over the Internet, offering cryptographic assurances for the following:
 
-DMARC + DKIM + SPF
+\begin{itemize}
+\item \emph{Authentication} with public-key (asymmetric) cryptography. In TLS, the server is always authenticated, and the client is optionally authenticated.
+\item \emph{Confidentiality} with secret-key (symmetric) cryptography. Data sent over the channel is encrypted in transit.
+\item \emph{Integrity} with cryptographic message-authentication codes. Data sent over the channel cannot be modified without detection~\cite{rfc8446}.
+\end{itemize}
 
-forwarding from namecheap
+For protecting web application users and web API\footnote{Application Programming Interfaces define interactions between softwares. In this context, a web API means a web-facing service, which serves data for client applications.} consumers on the Internet, a web server should serve its contents over TLS, e.g.\ over the HTTPS protocol, which is essentially HTTP over TLS. More and more web browser APIs require websites and web applications to be served over HTTPS~\cite{secure-context-features}.
 
-Sendgrid
+Authenticating the server involves a digital certificate, which proves the ownership of the server's \emph{public key}. The public key and its cryptographic key pair, the \emph{private key} are involved in the cryptographic key handshake of TLS, resulting in a symmetric key for encrypting data in transit. Certificates are issued to one or more specific domain names, cryptographically signed by a trusted third party called a Certificate Authority (CA)\footnote{For the sake of compactness, I will not go into the endless details of the X.509 certificate infrastructure and the underlying public-key cryptography in this thesis.}. Acquiring such a certificate requires proving the ownership of the domain names in question. \emph{Non-wildcard certificates} only certify domain names they were issued to, whereas \emph{wildcard certificates} certify given domains and all their immediate subdomains.
 
-dns records for sendgrid
+\subsection{Purchasing a TLS certificate}
+
+Having a TLS certificate signed by a trusted CA is a requirement of serving content over HTTPS, thus it is necessary — but not sufficient on its own — for securing web applications and web APIs. Such certificates can be purchased from a multitude of vendors. For \lstinline{diplomatiq.org}, I have purchased a TLS certificate from Sectigo, one of the leading TLS certificate vendors in the world~\cite{sectigo-website}. The certificate is issued to the domain names \lstinline{diplomatiq.org} and \lstinline{www.diplomatiq.org}, and since it is a non-wildcard certificate, I will need to acquire additional certificates for other subdomains.
+
+\subsection{Security}
+
+The private key of a certificate is a highly sensitive secret. An attacker obtaining the private key of a server certificate is able to decrypt all trafic sent to and received by the server, or it can even modify the data in transit, tricking the user into surrendering sensitive information, such as passwords. While being stored securely, the private key needs to be always available to the server, as it is constantly involved in the communication.
+
+The private key of the certificate issued to \lstinline{diplomatiq.org} is encrypted with a long, cryptographically random password, and it is stored in a cryptographic Hardware Security Module\footnote{Hardware Security Modules are separate physical computers designed to keep cryptographic keys safe. They offer tamper resistance making it extremely difficult to extract and steal secret keys~\cite{fips-140-3}.} by Microsoft Azure's Key Vault\footnote{Microsoft Azure and its Key Vault service in particular will be detailed later.} service. This way, the private key is only available in an audited, secure manner, guarded by strict access policies.
+
+As an additional safety measure, I have deployed \emph{Certification Authority Authorization (CAA)} DNS records for \lstinline{diplomatiq.org}. CAA records specify authorized CAs, which are allowed to issue certificates for the given domains~\cite{rfc8659}. The records essentially form a CA whitelist, preventing the mis-issue of valid TLS certificates by unauthorized parties. I set up CAA records as granularly as possible: every subdomain has its own record. I specified Sectigo for the apex domain \lstinline{diplomatiq.org} and the subdomain \lstinline{www.diplomatiq.org}, DigiCert for the subdomains \lstinline{app.diplomatiq.org} and \lstinline{api.diplomatiq.org}, and Let's Encrypt for the subdomain \lstinline{neo4j.diplomatiq.org}. DNSSEC prevents spoofing additional CAA records into the Diplomatiq domain.
+
+Diplomatiq currently only makes use of server certificates for supporting TLS on its website, web application and web API. Possible future uses of certificates include signing released software with a code signing certificate, or authenticating API clients with client certificates.
+
+\section{Email infrastructure}
+
+\subsection{Overview and usages}
+
+The ability of sending and receiving emails is a basic business requirement for communicating with business clients and service providers. In the following, I will refer these as \emph{individual emails}, as they are mostly initiated by a human individual. Also, application development often demands sending automated \emph{transactional emails} for customers, as well as \emph{promotional emails} delivering marketing campaigns and promotions.
+
+\subsection{Sending and receiving individual emails}
+
+Namecheap offers basic email forwarding capabilities along with its DNS service I have subscribed to. Even though certain business email providers offer more robust — and also more expensive — solutions, I decided that my current requirements are covered by forwarding emails received by any address ending with \lstinline{@diplomatiq.org} to my personal email address. I also managed to configure my personal email provider to send emails in the name of several \lstinline{@diplomatiq.org} email addresses through SendGrid, a service for delivering transactional and promotional emails~\cite{sendgrid-website}. For achieving this, I needed to set up separate email entities in my personal email provider to send emails through SendGrid's SMTP-over-TLS API, authenticated by a newly created API key.
+
+Currently several email addresses are configured with the above method, each used for different purposes in different services. Dedicated \emph{per-service email addresses} are useful for services lacking federated authentication and role-based access control features, as they enable to distribute reponsibilities among colleagues by providing access to the email addresses, without irrevocably binding those responsibilities to the colleagues' email addresses. The configured email addresses with their usage are available in the Appendix.
+
+\subsection{Transactional and marketing emails}
+
+For delivering transactional and marketing emails, I subscribed to SendGrid's smallest paid plan, which includes 40,000 sent emails per month. The service allows to create rich-text email templates in its online editor, then send personalized emails to multiple addresses, by substituting template placeholders with per-user customized data. I configured SendGrid to use the \lstinline{team@diplomatiq.org} email address for all outgoing email communication. Configuring the service to access and use the \lstinline{diplomatiq.org} domain was straightforward: it only involved adding generated \lstinline{CNAME} records to the DNS configuration.
+
+\subsection{Securing SendGrid access}
+
+Since SendGrid offers neither federated nor email-based user management, I created a new account with a username. I enabled two-factor authentication for the service, and I defined various alerts for account access and quota usage. I also introduced IP address-based access controls: my user account is accessible only from my static home IP address and my private VPN\footnote{Virtual Private Network}\footnote{I have a personal VPN hosted by a self-configured virtual machine in a data center. The VPN's IP address is also allowed to access SendGrid, so I can log in to my account even when I am not home.}, and the SendGrid API authenticated by my API keys is only accessible from the IP range of the production server infrastructure, which I will detail later. The issued API keys have minimal privileges allowing email sending only.
+
+\subsection{Securing emails sent by Diplomatiq}
+
+Sending emails over the Internet is inherently insecure, as the design of the core email protocols do not incorporate any security features for sender authentication and authorization~\cite{foster2015security}. The infrastructure on its own allows anyone to send emails from any domain, without verifying the authenticity of the sender~\cite{rfc5321}. There are several kinds of security measures to mitigate this threat, such as the Sender Policy Framework~\cite{rfc7208}, DomainKeys Identified Mail Signatures~\cite{rfc6376}, and the Domain-based Message Authentication, Reporting, and Conformance~\cite{rfc7489} protocols. I have applied all of them to the Diplomatiq domain.
+
+The Sender Policy Framework (SPF) was designed to detect if the sender address of an email was forged by a party outside the sender's domain. The framework's operation is based on a DNS TXT record\footnote{The SPF record has a specific format, which is defined in RFC 7208~\cite{rfc7208}.} indicating the host or IP address of email servers authorized to send emails originating from the domain. Besides authorized servers, the record also includes instructions on what to do with detected forgeries: such emails can either be forwarded to the recipient's mailbox tagged as spam, or rejected and not delivered. Diplomatiq's SPF policy is automatically configured by Namecheap and SendGrid based on my settings, and it commands to reject emails detected as forgeries.
+
+The DomainKeys Identified Mail (DKIM) Signatures scheme offers similar email sender forgery detection capabilities as the Sender Policy Framework, but also it provides additional assurances supported by public-key cryptography. For utilizing DKIM, the sender server needs to cryptographically sign outgoing emails with a private key, and the domain's administrators need to publish the server's corresponding public key in a DNS TXT record\footnote{The DKIM record contains additional information besides the key itself. The format of the record is specified by RFC 6376~\cite{rfc6376}.}. Recipient email clients can check the authenticity of an email by looking up the sender domain's public DKIM key then verifying the DKIM signature attached to the email\footnote{DKIM signatures are usually verified by email clients rather than end-users, thus the signatures are generally not visible as part of the email.} with the public key. On the one hand, a valid DKIM signature cryptographically guarantees that the email was sent from an authorized party, and on the other hand, it also verifies that the email was not modified in transit. The DKIM records of Diplomatiq are automatically managed by Namecheap and SendGrid.
+
+The Domain-based Message Authentication, Reporting and Conformance (DMARC) protocol extends SPF and DKIM by allowing domain administrators to explicitly indicate that emails are to be authenticated by SPF or DKIM or both, and to instruct email recipient clients to behave in a specific way when any or all authentications fail, such as rejecting the message, or putting it in quarantine. DMARC also offers a reporting mechanism, which sends reports about authentication failures to the specified email address. Reports can be daily aggregates or real-time \textquote{forensic} reports including detailed data about each failures, or both. Diplomatiq's DMARC policy is set to the strictest: emails not passing all checks should be rejected and not delivered. For receiving and analyzing aggregate reports, I use an external tool, called Dmarcian~\cite{dmarcian-website}. DNSSEC prevents the unauthorized modification of Diplomatiq's SPF, DKIM and DMARC policies.
 
 \section{Source code management}
 
-GitHub organization, 2FA, security settings, etc
+\subsection{Choosing tools}
+
+I have been maintaining altogether 9 projects related to Diplomatiq, all being tracked by a version control system, Git. I chose Git because of its maturity\footnote{Git has been developed since 2005~\cite{git-initial-commit}.} and popularity, and also because of the fact that this is the versioning tool that I am most experienced with. For open-source software maintenance, I chose GitHub, as it is the most popular software collaboration platform~\footnote{GitHub has over 40 million users~\cite{github-user-count}.}, and offers advanced development and project management tools, security settings, and a full-featured, integrated testing infrastructure. Also, it enables to maintain repositories under a larger unit, called organization, offering sophisticated administrative and security features. For open-source projects, GitHub is free of charge~\cite{github-pricing}.
+
+\subsection{Registering the Diplomatiq GitHub organization}
+
+I registered an organization on GitHub under the name \emph{Diplomatiq}. I uploaded all necessary data including logos, descriptions, general and billing email addresses, and website addresses. Considering future employees, I made it mandatory for all members of the organization to use two-factor authentication. I have verified my ownership of the \lstinline{diplomatiq.org} domain to GitHub with a custom DNS TXT record, thus GitHub displays a \textquote{Verified} label next to Diplomatiq's website address. For making future collaborative development eaiser, I added a set of organization-wide issue and pull request labels, making sure all repositories I create will have the same issue types.
+
+\subsection{Standardized, organization-wide documents and configurations}
+
+As I created more project, I experienced that certain documents, templates and configurations need to be present in all of projects, mainly because of the recommended open-source community standards recommended by GitHub~\cite{opensource-guide}. For being able to instantly create a new project with Diplomatiq's standardized project structure containing all necessary files, I have created another project called \emph{project-config}, which will be described in \Cref{chapter:libraries}.
+
+\subsubsection{License}
+
+The most basic project requirement is a license. Within Diplomatiq, project licenses are stored in a file called \lstinline{LICENSE}, stored in the project's root directory. This is in line with GitHub's recommendations, thus the platform can automatically parse and display license information. Currently all Diplomatiq projects are licensed under the MIT License~\cite{mit-license}.
+
+\subsubsection{Readme}
+
+All projects are initialized with a \lstinline{README.md} file containing the project's name and description. I put all project documentation into the readme file for most projects, thus these files are not left empty. I also include badges into readme files about build status, versioning and license information, as well as code quality and code coverage data.
+
+\subsubsection{Code of conduct}
+
+Code of conduct documents formulate a set of ethical norms and responsibilities on practices of collaboration. Diplomatiq uses the Contributor Convenant's Code of Conduct, version 1.4 across all its projects, in a file named \lstinline{CODE_OF_CONDUCT.md}. Even though currently there is no open-source collaboration in Diplomatiq's repositories, once we get there, I want to take the Code of Conduct very seriously, in order to create a welcoming and inclusive development environment. I have already configured the \emph{conduct@diplomatiq.org} email address for reporting unacceptable behaviour.
+
+\subsubsection{Contributing information}
+
+The document \lstinline{CONTRIBUTING.md} — named in line with the open source recommendations — summarizes how to contribute to Diplomatiq projects. It describes means of communication with project maintainers, and methods of requesting features and reporting bugs. It formulates a set of submission guidelines for issues and pull requests. It also presents a style guide for the code itself, and for commit messages. As I have adopted the Angular-style Conventional Commits specification~\cite{conventionalcommits}, the document introduces the concept conventional commit messages in an example-based manner.
+
+\subsubsection{Pull request template}
+
+In order to discourage future contributors from submitting incomplete work, I prepared a checklist as part of GitHub's pull request template. As the checklist is saved into the file called \lstinline{.github/PULL_REQUEST_TEMPLATE.md}, GitHub displays it as the initial contents of the to-be-submitted pull request's details field. The checklist requires:
+
+\begin{itemize}
+\item the pull request to consist of one commit;
+\item the commit message to follow the commit message guidelines;
+\item the tests to be updated (if applicable);
+\item the documentation to be updated (if applicable).
+\end{itemize}
+
+Beyond the checklist, the template instructs the developer to indicate the pull request's type, describe the application behavior the pull request modifies, describe the new behaviour, and indicate if the pull request introduces a breaking change.
+
+\subsubsection{Issue templates}
+
+In open-source projects, it is common that developers submit issues without describing clear and concise details. To discourage this routine, I created two types of issue templates. When developers are to create a new issue in a repository, they are offered these issue templates to choose from. The \emph{bug report} template encourage developers to detail the perceived failure as much as possible, and to disclose the execution context, expected behaviour and steps of reproduction. The \emph{feature request} template supports the issuer in describing their exact requirements along with considered solutions, if there are any.
+
+\subsubsection{.editorconfig file}
+
+EditorConfig helps maintain consistent coding styles for multiple developers working on the same project across various editors and IDEs. The EditorConfig project consists of a file format for defining coding styles and a collection of text editor plugins that enable editors to read the file format and adhere to defined styles~\cite{editorconfig}.
+
+\subsubsection{Security policy}
+
+Since exploiting security vulnerabilities can lead to catastrophic consequences like data breaches or loss of data, security issues are to be handled carefully and discreetly. A security policy establishes rules and methods for reporting a security issue in a development project to the maintainers without causing any harm. Diplomatiq's security policy requires contributors to report found security issues to the \emph{security@diplomatiq.org} email address, possibly encrypted with Diplomatiq's public PGP key\footnote{Diplomatiq's public PGP key is available on the https://www.diplomatiq.org/pgp-key.txt URL.}.
+
+\subsection{Development model}
+
+In most of the repositories, I use the
+
+branching model
+
+branch protection rules
 
 continuous integration
 
-domain name verification verification
+release model
+
+semver
+
+automated changelog generation
+
+\subsection{Automated dependency management}
 
 \section{NPM}
 
 @diplomatiq
 
 \section{CI infrastructure}
+
+sonarcloud
+
+\section{Means of everyday communication}
+
+slack
+
+gitter
 
 \section{Neo4j startup program}
 Enterprise Edition license
