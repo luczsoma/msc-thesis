@@ -9,13 +9,14 @@ The underlying infrastructure plays a foundational role in the eventual success 
 
 This involves two principles. The first is that key infrastructure elements need to be established using mature and robust solutions, so they do not need to be rebuilt or replaced later. This excludes trial versions of services, expiring student offers, and generally free solutions as well. Organizational hierarchy needs to be set up properly, allowing later expansion, and the infrastructure with all its access credentials should be documented meticulously. The second principle is that security should be taken into consideration from the very beginning. Authentication and authorization policies should be the as strict as possible, and all access credentials should be stored in a safely encrypted manner.
 
-Throughout this chapter, I introduce the various infrastructure elements I evaluated, purchased and integrated into Diplomatiq's infrastructure. Security-related aspects will appear in most sections, but I detail further security measures in a dedicated section as well.
+Throughout this chapter, I introduce the various infrastructure elements I evaluated, purchased and integrated into Diplomatiq's infrastructure. Security-related aspects will appear in most of the sections.
 
 \section{Naming}
+\label{section:naming}
 
 A good brand name identifies a company in various ways. Apart from marketing purposes, the name should be suifficently unique to be usable within the various services and namespaces on the Internet. For this purpose, \emph{Diplomatiq} seemed to be suitable: it is unique, appropriately short for both domain names~\cite{howtochoosedomainname} and the human memory~\cite{memoryfour} with its 10~characters, and it characterizes its subject well.
 
-I have formulated the following — prioritized — guidelines for reserving namespaces for Diplomatiq across services on the Internet:
+I formulated the following — prioritized — guidelines for reserving namespaces for Diplomatiq across services on the Internet:
 
 \begin{enumerate}
 \item If available, use \emph{Diplomatiq} (capitalized).
@@ -50,7 +51,7 @@ For visual recognition, a company needs a well-defined image. Diplomatiq's corpo
 
 \subsection{Overview and purchasing the domain name}
 
-A domain name in the Domain Name System (DNS) represents a network domain, or it translates to an Internet Protocol address~\cite{rfc1035}. Having a domain name is necessary for companies with web-facing services, both for users to easily memorize the address of the service, and for deploying security measures, such as Transport Layer Security (TLS)~\cite{rfc8446}. As Diplomatiq is not primarily a commercial entity, but rather a diplomatic organization, I decided its domain name to be \lstinline{diplomatiq.org}. Since I was already registered at the domain name registrar Namecheap~\cite{namecheap-website}, it was starightforward to purchase the domain name from them, under my existing user account. I have set up various DNS records for deployed services, these will be detailed later at describing the services themselves.
+A domain name in the Domain Name System (DNS) represents a network domain, or it translates to an Internet Protocol address~\cite{rfc1035}. Having a domain name is necessary for companies with web-facing services, both for users to easily memorize the address of the service, and for deploying security measures, such as Transport Layer Security (TLS)~\cite{rfc8446}. As Diplomatiq is not primarily a commercial entity, but rather a diplomatic organization, I decided its domain name to be \lstinline{diplomatiq.org}. Since I was already registered at the domain name registrar Namecheap~\cite{namecheap-website}, it was starightforward to purchase the domain name from them, under my existing user account. I set up various DNS records for deployed services, these will be detailed later at describing the services themselves.
 
 \subsection{Security}
 
@@ -76,7 +77,7 @@ Authenticating the server involves a digital certificate, which proves the owner
 
 \subsection{Purchasing a TLS certificate}
 
-Having a TLS certificate signed by a trusted CA is a requirement of serving content over HTTPS, thus it is necessary — but not sufficient on its own — for securing web applications and web APIs. Such certificates can be purchased from a multitude of vendors. For \lstinline{diplomatiq.org}, I have purchased a TLS certificate from Sectigo, one of the leading TLS certificate vendors in the world~\cite{sectigo-website}. The certificate is issued to the domain names \lstinline{diplomatiq.org} and \lstinline{www.diplomatiq.org}, and since it is a non-wildcard certificate, I will need to acquire additional certificates for other subdomains.
+Having a TLS certificate signed by a trusted CA is a requirement of serving content over HTTPS, thus it is necessary — but not sufficient on its own — for securing web applications and web APIs. Such certificates can be purchased from a multitude of vendors. For \lstinline{diplomatiq.org}, I purchased a TLS certificate from Sectigo, one of the leading TLS certificate vendors in the world~\cite{sectigo-website}. The certificate is issued to the domain names \lstinline{diplomatiq.org} and \lstinline{www.diplomatiq.org}, and since it is a non-wildcard certificate, I will need to acquire additional certificates for other subdomains.
 
 \subsection{Security}
 
@@ -84,7 +85,7 @@ The private key of a certificate is a highly sensitive secret. An attacker obtai
 
 The private key of the certificate issued to \lstinline{diplomatiq.org} is encrypted with a long, cryptographically random password, and it is stored in a cryptographic Hardware Security Module\footnote{Hardware Security Modules are separate physical computers designed to keep cryptographic keys safe. They offer tamper resistance making it extremely difficult to extract and steal secret keys~\cite{fips-140-3}.} by Microsoft Azure's Key Vault\footnote{Microsoft Azure and its Key Vault service in particular will be detailed later.} service. This way, the private key is only available in an audited, secure manner, guarded by strict access policies.
 
-As an additional safety measure, I have deployed \emph{Certification Authority Authorization (CAA)} DNS records for \lstinline{diplomatiq.org}. CAA records specify authorized CAs, which are allowed to issue certificates for the given domains~\cite{rfc8659}. The records essentially form a CA whitelist, preventing the mis-issue of valid TLS certificates by unauthorized parties. I set up CAA records as granularly as possible: every subdomain has its own record. I specified Sectigo for the apex domain \lstinline{diplomatiq.org} and the subdomain \lstinline{www.diplomatiq.org}, DigiCert for the subdomains \lstinline{app.diplomatiq.org} and \lstinline{api.diplomatiq.org}, and Let's Encrypt for the subdomain \lstinline{neo4j.diplomatiq.org}. DNSSEC prevents spoofing additional CAA records into the Diplomatiq domain.
+As an additional safety measure, I deployed \emph{Certification Authority Authorization (CAA)} DNS records for \lstinline{diplomatiq.org}. CAA records specify authorized CAs, which are allowed to issue certificates for the given domains~\cite{rfc8659}. The records essentially form a CA whitelist, preventing the mis-issue of valid TLS certificates by unauthorized parties. I set up CAA records as granularly as possible: every subdomain has its own authorization. I specified Sectigo for the apex domain \lstinline{diplomatiq.org} and the subdomain \lstinline{www.diplomatiq.org}, DigiCert for the subdomains \lstinline{app.diplomatiq.org} and \lstinline{api.diplomatiq.org}, and Let's Encrypt for the subdomain \lstinline{neo4j.diplomatiq.org}. DNSSEC prevents spoofing additional CAA records into the Diplomatiq domain.
 
 Diplomatiq currently only makes use of server certificates for supporting TLS on its website, web application and web API. Possible future uses of certificates include signing released software with a code signing certificate, or authenticating API clients with client certificates.
 
@@ -96,7 +97,7 @@ The ability of sending and receiving emails is a basic business requirement for 
 
 \subsection{Sending and receiving individual emails}
 
-Namecheap offers basic email forwarding capabilities along with its DNS service I have subscribed to. Even though certain business email providers offer more robust — and also more expensive — solutions, I decided that my current requirements are covered by forwarding emails received by any address ending with \lstinline{@diplomatiq.org} to my personal email address. I also managed to configure my personal email provider to send emails in the name of several \lstinline{@diplomatiq.org} email addresses through SendGrid, a service for delivering transactional and promotional emails~\cite{sendgrid-website}. For achieving this, I needed to set up separate email entities in my personal email provider to send emails through SendGrid's SMTP-over-TLS API, authenticated by a newly created API key.
+Namecheap offers basic email forwarding capabilities along with its DNS service I subscribed to. Even though certain business email providers offer more robust — and also more expensive — solutions, I decided that my current requirements are covered by forwarding emails received by any address ending with \lstinline{@diplomatiq.org} to my personal email address. I also managed to configure my personal email provider to send emails in the name of several \lstinline{@diplomatiq.org} email addresses through SendGrid, a service for delivering transactional and promotional emails~\cite{sendgrid-website}. For achieving this, I needed to set up separate email entities in my personal email provider to send emails through SendGrid's SMTP-over-TLS API, authenticated by a newly created API key.
 
 Currently several email addresses are configured with the above method, each used for different purposes in different services. Dedicated \emph{per-service email addresses} are useful for services lacking federated authentication and role-based access control features, as they enable to distribute reponsibilities among colleagues by providing access to the email addresses, without irrevocably binding those responsibilities to the colleagues' email addresses. The configured email addresses with their usage are available in the Appendix.
 
@@ -106,47 +107,47 @@ For delivering transactional and marketing emails, I subscribed to SendGrid's sm
 
 \subsection{Securing SendGrid access}
 
-Since SendGrid offers neither federated nor email-based user management, I created a new account with a username. I enabled two-factor authentication for the service, and I defined various alerts for account access and quota usage. I also introduced IP address-based access controls: my user account is accessible only from my static home IP address and my private VPN\footnote{Virtual Private Network}\footnote{I have a personal VPN hosted by a self-configured virtual machine in a data center. The VPN's IP address is also allowed to access SendGrid, so I can log in to my account even when I am not home.}, and the SendGrid API authenticated by my API keys is only accessible from the IP range of the production server infrastructure, which I will detail later. The issued API keys have minimal privileges allowing email sending only.
+Since SendGrid offers neither federated nor email-based user management, I created a new account with a username. I enabled two-factor authentication for the service, and I defined various alerts for account access and quota usage. I also introduced IP address-based access controls: my user account is accessible only from my static home IP address and my private VPN\footnote{Virtual Private Network}\footnote{I have a personal VPN hosted by a self-configured virtual machine in a data center. The VPN's IP address is also allowed to access SendGrid, so I can log in to my account even if I am not home.}, and the SendGrid API authenticated by my API keys is only accessible from the IP range of the production server infrastructure, which I will detail later. The issued API keys have minimal privileges allowing email sending only.
 
 \subsection{Securing emails sent by Diplomatiq}
 
-Sending emails over the Internet is inherently insecure, as the design of the core email protocols do not incorporate any security features for sender authentication and authorization~\cite{foster2015security}. The infrastructure on its own allows anyone to send emails from any domain, without verifying the authenticity of the sender~\cite{rfc5321}. There are several kinds of security measures to mitigate this threat, such as the Sender Policy Framework~\cite{rfc7208}, DomainKeys Identified Mail Signatures~\cite{rfc6376}, and the Domain-based Message Authentication, Reporting, and Conformance~\cite{rfc7489} protocols. I have applied all of them to the Diplomatiq domain.
+Sending emails over the Internet is inherently insecure, as the design of the core email protocols do not incorporate any security features for sender authentication and authorization~\cite{foster2015security}. The infrastructure on its own allows anyone to send emails from any domain, without verifying the authenticity of the sender~\cite{rfc5321}. There are several additional security measures to mitigate this threat, such as the Sender Policy Framework~\cite{rfc7208}, DomainKeys Identified Mail Signatures~\cite{rfc6376}, and the Domain-based Message Authentication, Reporting, and Conformance~\cite{rfc7489} protocols. I have applied all three of them for Diplomatiq.
 
-The Sender Policy Framework (SPF) was designed to detect if the sender address of an email was forged by a party outside the sender's domain. The framework's operation is based on a DNS TXT record\footnote{The SPF record has a specific format, which is defined in RFC 7208~\cite{rfc7208}.} indicating the host or IP address of email servers authorized to send emails originating from the domain. Besides authorized servers, the record also includes instructions on what to do with detected forgeries: such emails can either be forwarded to the recipient's mailbox tagged as spam, or rejected and not delivered. Diplomatiq's SPF policy is automatically configured by Namecheap and SendGrid based on my settings, and it commands to reject emails detected as forgeries.
+The Sender Policy Framework (SPF) was designed to detect if the sender address of an email was forged by a party outside the sender's domain. The framework's operation is based on a DNS TXT record\footnote{The SPF record has a specific format, which is defined in RFC 7208~\cite{rfc7208}.} indicating the host or IP address of email servers authorized to send emails originating from the domain. Besides authorized servers, the record also includes instructions for recipient servers and clients on what to do with detected forgeries: such emails can either be forwarded to the recipient's mailbox tagged as spam, or rejected and not delivered. Diplomatiq's SPF policy is configured by Namecheap and SendGrid based on my settings, and it commands to reject emails detected as forgeries.
 
-The DomainKeys Identified Mail (DKIM) Signatures scheme offers similar email sender forgery detection capabilities as the Sender Policy Framework, but also it provides additional assurances supported by public-key cryptography. For utilizing DKIM, the sender server needs to cryptographically sign outgoing emails with a private key, and the domain's administrators need to publish the server's corresponding public key in a DNS TXT record\footnote{The DKIM record contains additional information besides the key itself. The format of the record is specified by RFC 6376~\cite{rfc6376}.}. Recipient email clients can check the authenticity of an email by looking up the sender domain's public DKIM key then verifying the DKIM signature attached to the email\footnote{DKIM signatures are usually verified by email clients rather than end-users, thus the signatures are generally not visible as part of the email.} with the public key. On the one hand, a valid DKIM signature cryptographically guarantees that the email was sent from an authorized party, and on the other hand, it also verifies that the email was not modified in transit. The DKIM records of Diplomatiq are automatically managed by Namecheap and SendGrid.
+The DomainKeys Identified Mail (DKIM) Signatures scheme offers similar email sender forgery detection capabilities as the Sender Policy Framework, but also it provides additional assurances supported by public-key cryptography. For utilizing DKIM, the sender server needs to cryptographically sign outgoing emails with a private key, and the domain's administrators need to publish the server's corresponding public key in a DNS TXT record\footnote{The DKIM record contains additional information besides the key itself. The format of the record is specified by RFC 6376~\cite{rfc6376}.}. Recipient email servers and clients can check the authenticity of an email by looking up the sender domain's public DKIM key then verifying the DKIM signature attached to the email\footnote{DKIM signatures are usually verified by email clients rather than end-users, thus the signatures are generally not visible as part of the email.} with the public key. On the one hand, a valid DKIM signature cryptographically guarantees that the email was sent from an authorized party, and on the other hand, it also verifies that the email was not modified in transit. I configured the DKIM records of Diplomatiq to be automatically managed by Namecheap and SendGrid.
 
-The Domain-based Message Authentication, Reporting and Conformance (DMARC) protocol extends SPF and DKIM by allowing domain administrators to explicitly indicate that emails are to be authenticated by SPF or DKIM or both, and to instruct email recipient clients to behave in a specific way when any or all authentications fail, such as rejecting the message, or putting it in quarantine. DMARC also offers a reporting mechanism, which sends reports about authentication failures to the specified email address. Reports can be daily aggregates or real-time \textquote{forensic} reports including detailed data about each failures, or both. Diplomatiq's DMARC policy is set to the strictest: emails not passing all checks should be rejected and not delivered. For receiving and analyzing aggregate reports, I use an external tool, called Dmarcian~\cite{dmarcian-website}. DNSSEC prevents the unauthorized modification of Diplomatiq's SPF, DKIM and DMARC policies.
+The Domain-based Message Authentication, Reporting and Conformance (DMARC) protocol extends SPF and DKIM by allowing domain administrators to explicitly indicate that emails are to be authenticated by SPF or DKIM or both, and to instruct email recipient clients to behave in a specific way when any or all authentications fail, such as rejecting the message, or putting it in quarantine. DMARC also offers a reporting mechanism, which sends reports about authentication failures to a specified email address. Reports can be daily aggregates or real-time \textquote{forensic} reports including detailed data about each failures, or both. Diplomatiq's DMARC policy is set to the strictest: emails not passing all checks should not be delivered to the recipient's inbox. For receiving and analyzing aggregate reports, I use an external tool, called Dmarcian~\cite{dmarcian-website}. DNSSEC prevents the unauthorized modification of Diplomatiq's SPF, DKIM and DMARC policies.
 
 \section{Source code management}
 
 \subsection{Choosing tools}
 
-I have been maintaining altogether 9 projects related to Diplomatiq, all being tracked by a version control system, Git. I chose Git because of its maturity\footnote{Git has been developed since 2005~\cite{git-initial-commit}.} and popularity, and also because of the fact that this is the versioning tool that I am most experienced with. For open-source software maintenance, I chose GitHub, as it is the most popular software collaboration platform~\footnote{GitHub has over 40 million users~\cite{github-user-count}.}, and offers advanced development and project management tools, security settings, and a full-featured, integrated testing infrastructure. Also, it enables to maintain repositories under a larger unit, called organization, offering sophisticated administrative and security features. For open-source projects, GitHub is free of charge~\cite{github-pricing}.
+I have been maintaining altogether 9 projects related to Diplomatiq, all being tracked by a version control system, Git. I chose Git because of its maturity\footnote{Git has been developed since 2005~\cite{git-initial-commit}.} and popularity, and also because of the fact that this is the versioning tool that I am most experienced with. For open-source software maintenance, I chose GitHub, as it is the most popular software collaboration platform~\footnote{GitHub has over 40 million users~\cite{github-user-count}.}, and offers advanced development and project management tools, security settings, and a full-featured, integrated testing infrastructure. Also, it enables to maintain repositories under a larger unit, called organization, offering sophisticated administrative and security features. GitHub is free of charge for open-source projects~\cite{github-pricing}.
 
 \subsection{Registering the Diplomatiq GitHub organization}
 
-I registered an organization on GitHub under the name \emph{Diplomatiq}. I uploaded all necessary data including logos, descriptions, general and billing email addresses, and website addresses. Considering future employees, I made it mandatory for all members of the organization to use two-factor authentication. I have verified my ownership of the \lstinline{diplomatiq.org} domain to GitHub with a custom DNS TXT record, thus GitHub displays a \textquote{Verified} label next to Diplomatiq's website address. For making future collaborative development eaiser, I added a set of organization-wide issue and pull request labels, making sure all repositories I create will have the same issue types.
+I registered an organization on GitHub under the name \emph{Diplomatiq}. I uploaded all necessary data including logos, descriptions, general and billing email addresses, and website addresses. Considering future employees, I made it mandatory for all members of the organization to use two-factor authentication. I verified my ownership of the \lstinline{diplomatiq.org} domain to GitHub with a custom DNS TXT record, thus GitHub displays a \textquote{Verified} label next to Diplomatiq's website address. For making future collaborative development eaiser, I added a set of organization-wide issue and pull request labels, making sure all repositories I create have the same issue types.
 
 \subsection{Standardized, organization-wide documents and configurations}
 
-As I created more project, I experienced that certain documents, templates and configurations need to be present in all of projects, mainly because of the recommended open-source community standards recommended by GitHub~\cite{opensource-guide}. For being able to instantly create a new project with Diplomatiq's standardized project structure containing all necessary files, I have created another project called \emph{project-config}, which will be described in \Cref{chapter:libraries}.
+As I created more projects, I experienced that certain documents, templates and configurations need to be present in all of projects, mainly because of the recommended open-source community standards maintained by GitHub~\cite{opensource-guide}. For being able to instantly create a new project with Diplomatiq's standardized project structure containing all such necessary files, I created another project called \emph{project-config}, which will be described in \Cref{chapter:libraries}.
 
 \subsubsection{License}
 
-The most basic project requirement is a license. Within Diplomatiq, project licenses are stored in a file called \lstinline{LICENSE}, stored in the project's root directory. This is in line with GitHub's recommendations, thus the platform can automatically parse and display license information. Currently all Diplomatiq projects are licensed under the MIT License~\cite{mit-license}.
+The most basic project requirement is a license. Within Diplomatiq, project licenses are stored in a file called \lstinline{LICENSE} within the project's root directory. This is in line with GitHub's recommendations, thus the platform can automatically parse and display license information. Currently all Diplomatiq projects are licensed under the MIT License~\cite{mit-license}.
 
 \subsubsection{Readme}
 
-All projects are initialized with a \lstinline{README.md} file containing the project's name and description. I put all project documentation into the readme file for most projects, thus these files are not left empty. I also include badges into readme files about build status, versioning and license information, as well as code quality and code coverage data.
+All projects are initialized with a \lstinline{README.md} file containing the project's name and description. I put all project documentation into the readme file for most projects, thus these files are not left empty. I usually also include badges into readme files about build status, versioning and license information, as well as code quality and code coverage data.
 
 \subsubsection{Code of conduct}
 
-Code of conduct documents formulate a set of ethical norms and responsibilities on practices of collaboration. Diplomatiq uses the Contributor Convenant's Code of Conduct, version 1.4 across all its projects, in a file named \lstinline{CODE_OF_CONDUCT.md}. Even though currently there is no open-source collaboration in Diplomatiq's repositories, once we get there, I want to take the Code of Conduct very seriously, in order to create a welcoming and inclusive development environment. I have already configured the \emph{conduct@diplomatiq.org} email address for reporting unacceptable behaviour.
+Code of conduct documents formulate a set of ethical norms and responsibilities on practices of collaboration. Diplomatiq uses the version 1.4 of the Contributor Convenant's Code of Conduct across all its projects, in a file named \lstinline{CODE_OF_CONDUCT.md}. Even though currently there is no open-source collaboration in Diplomatiq's repositories, once we get there, I want to take the Code of Conduct very seriously, in order to create a welcoming and inclusive development environment. I have already configured the \emph{conduct@diplomatiq.org} email address for reporting unacceptable behaviour.
 
 \subsubsection{Contributing information}
 
-The document \lstinline{CONTRIBUTING.md} — named in line with the open source recommendations — summarizes how to contribute to Diplomatiq projects. It describes means of communication with project maintainers, and methods of requesting features and reporting bugs. It formulates a set of submission guidelines for issues and pull requests. It also presents a style guide for the code itself, and for commit messages. As I have adopted the Angular-style Conventional Commits specification~\cite{conventionalcommits}, the document introduces the concept conventional commit messages in an example-based manner.
+The document \lstinline{CONTRIBUTING.md} — named in line with GitHub's open source recommendations — summarizes how to contribute to Diplomatiq projects. It describes means of communication with project maintainers, and methods of requesting features and reporting bugs. It formulates a set of submission guidelines for issues and pull requests. It also presents a style guide for the code itself, and for commit messages. As I adopted the Angular-style Conventional Commits specification~\cite{conventionalcommits}, the document introduces the concept conventional commit messages in an example-based manner.
 
 \subsubsection{Pull request template}
 
@@ -163,7 +164,7 @@ Beyond the checklist, the template instructs the developer to indicate the pull 
 
 \subsubsection{Issue templates}
 
-In open-source projects, it is common that developers submit issues without describing clear and concise details. To discourage this routine, I created two types of issue templates. When developers are to create a new issue in a repository, they are offered these issue templates to choose from. The \emph{bug report} template encourage developers to detail the perceived failure as much as possible, and to disclose the execution context, expected behaviour and steps of reproduction. The \emph{feature request} template supports the issuer in describing their exact requirements along with considered solutions, if there are any.
+In open-source projects, it is common that developers submit issues without describing clear and concise details. To discourage this routine, I created two types of issue templates. When developers want to create a new issue in a repository, they are offered these issue templates to choose from. The \emph{bug report} template encourage developers to detail the perceived failure as much as possible, and to disclose the execution context, expected behaviour and steps of reproduction. The \emph{feature request} template supports the issuer in describing their exact requirements along with considered solutions, if there are any.
 
 \subsubsection{.editorconfig file}
 
@@ -173,67 +174,218 @@ EditorConfig helps maintain consistent coding styles for multiple developers wor
 
 Since exploiting security vulnerabilities can lead to catastrophic consequences like data breaches or loss of data, security issues are to be handled carefully and discreetly. A security policy establishes rules and methods for reporting a security issue in a development project to the maintainers without causing any harm. Diplomatiq's security policy requires contributors to report found security issues to the \emph{security@diplomatiq.org} email address, possibly encrypted with Diplomatiq's public PGP key\footnote{Diplomatiq's public PGP key is available on the https://www.diplomatiq.org/pgp-key.txt URL.}.
 
-\subsection{Development model}
+\subsection{Development and release model}
 
 In most of Diplomatiq's repositories, I use the a modified version of the GitFlow workflow~\cite{gitflow}. In essence, the workflow operates on four types of branches in a repository:
 
 \begin{enumerate}
 \item The \emph{master} branch is stable, and should be kept stable at all times. Code gets merged into the master branch only from a \emph{release} branch, immediately before a new version of the software is released into production\footnote{As described later, most Diplomatiq projects are configured in a way that merging a tagged commit into the master branch triggers the continuous delivery flow and deploys the version into production.}. Contributors can not push code directly onto this branch, but administrators can.
 \item The \emph{develop} branch is part of the repository's regular development flow. When creating feature branches, contributors branch from develop, and the target of contributional pull requests is the develop branch. Contributors can not push code directly onto this branch, but administrators can.
-\item The \emph{feature/*} branches are also part of the regular development flow. Contributors develop their contributions on feature branches, regardless of the contribution's type (feature, bugfix, refactor, etc.). Contributional pull requests are created from feature branches targeting develop.
+\item The \emph{feature/*} branches are also parts of the regular development flow. Contributors develop their contributions on feature branches, regardless of the contribution's type (feature, bugfix, refactor, etc.). Contributional pull requests are created from feature branches targeting develop.
 \item The \emph{release/*} branches are created when a release candidate is being prepared, by branching from develop. Release-related code changes like version bumps, changelog generation and release hotfixes are committed onto the release candidate's release branch, and eventually the finalized release candidate is tagged. After conducting all necessary testing on the release candidate, the release branch is merged into master, then it is immediately released into production by continuous delivery. After the deployment finished, the release branch is merged into develop. Contributors can not push code directly onto release branches, but administrators can.
 \end{enumerate}
 
-branch protection rules
+\Cref{fig:git-workflow} displays the above workflow, which can be well supported by GitHub's continuous integration and continuous delivery capabilities and branch protection rules. I created such rules for the \emph{master}, \emph{develop}, and \emph{release/*} branches. All branches require certain status checks to pass before merging code into the mentioned branches, and require the merged branches to be up to date when merging. As a general rule, I also require linear history in Diplomatiq's repositories, because I experienced that this way tasks such as automated changelog generation or finding regressions with \lstinline{git bisect} becomes easier.
 
-continuous integration
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\textwidth]{figures/git-workflow.pdf}
+    \caption{Diplomatiq's modified version of the GitFlow workflow}
+    \label{fig:git-workflow}
+\end{figure}
 
-release model
+I implemented a versioning strategy following the scheme of semantic versioning. This scheme defines the software version as a numeric triplet separated by dots in the form \lstinline{MAJOR.MINOR.PATCH}. The \lstinline{MAJOR} version is to be incremented in case the version contains incompatible API changes, the \lstinline{MINOR} version is to be incremented if the version's added functionality is backwards compatible, and the \lstinline{PATCH} version is to be incremented if the version solely consists of backwards compatible bug fixes~\cite{semver}. Adhering to the above helps managing software versions and dependencies with a lesser chance to introduce unintended breaking changes.
 
-semver
-
-automated changelog generation
+As Diplomatiq's development and release model features both conventional commits and semantic versioning, it was straightforward to implement automated changelog generation as well. Using Conventional Changelog Tools~\cite{conventional-changelog}, I automatically generate each released version's changelog from the commit messages contained by the version.
 
 \subsection{Automated dependency management}
 
-\section{Continuous integration and continuous delivery}
+As development and release processes become more and more automated, the time frame required for releasing new software versions reduces. With continuous delivery, pushing new code into the remote repository often means that the code is released to production without further developer interaction, after all necessary automated tests pass. This results in the need of more frequent dependency updates as well. Maintainers can either check and update every dependency manually, or they can apply automated solutions.
 
-sonarcloud
+I have configured Dependabot for the automatic maintenance of dependencies across Diplomatiq projects. Dependabot is a GitHub-owned, integrated tool for watching package managers like NPM and Maven, continuously checking for new versions published. I set up Dependabot in a way that if it detects one of the dependencies in Diplomatiq projects having a new version released, it opens a pull request in the related project with the dependency update. This automated workflow frees me from a lot of manual work, and also ensures that the dependencies of Diplomatiq projects are always up to date. Pull requests containing security-related updates are separately tagged, allowing me to handle them with higher priority. As I do not want to lose the ability of reviewing dependency updates, merging pull requests opened by Dependabot is not automated. But since continuous integration workflows are applied to all pull requests, all checks and tests defined in the repository are run for Dependabot's updates as well as for any other contribution.
 
-\section{NPM}
+\subsection{Continuous integration and continuous delivery}
 
-@diplomatiq
+Martin Fowler defines continuous integration (CI) as a software development practice where team members integrate their code changes into the repository mainline frequently, at least daily, and each integrations are verified by a set of automated build and test methods in order to detect integration errors as soon as possible. According to Fowler, this leads to less integration problems, and faster development and release cycles~\cite{fowler-ci}.
 
-\section{Means of everyday communication}
+In case of Diplomatiq projects, the repository mainline is the develop branch, and the integrations are essentially pull requests opened by repository contributors. The set of automated build and test methods applied to pull requests vary across projects according to the chosen technology, language, and framework, but Diplomatiq libraries and production software usually contain automated tests for verifying conformance, functional correctness, and adherence to various code quality metrics.
 
-slack
+I configured all projects to use GitHub Actions~\cite{githubactions} for continuous integration (and continuous delivery). Previously I used the mature and well-supported Travis CI~\cite{travisci}, but encountering constant stability problems with Travis made me to switch to the then freshly announced GitHub Actions. Since the switch, I experienced GitHub Actions to be a well-founded, stable solution. As it is an integral part of the GitHub platform, it furthers the possibilities of integrations by allowing to subscribe to more repository events than external platforms~\cite{actions-events}. It also enables to utilize GitHub's REST and GraphQL APIs for extending the base functionality of GitHub Actions with built-in authentication — a feature I make use of in almost all projects.
 
-gitter
+GitHub Actions essentially allows to create custom, automated \emph{workflows} for various phases of the software development lifecycle. Such workflows are declaratively defined in a YAML\footnote{Yet Another Markup Language is a markup language for human-readable configuration and serialization.} files, stored in the repository alongside the project's sourcecode. Workflows are triggered by GitHub's \emph{events}, and consist of \emph{jobs} able to run sequentially on different {runners} having different operating systems. Jobs encompass \emph{steps}, the smallest work unit within a workflow. Steps are either predefined \emph{actions} stored in public repositories and created by GitHub members, or shell scripts.
 
-\section{Neo4j startup program}
-Enterprise Edition license
+Although different projects require different CI workflows, I have established the following baseline for checking contributions across Diplomatiq projects:
 
-\section{Serving the application on the Internet}
+\begin{itemize}
+\item If the workflow was triggered by a pull request, check if the pull request consists of one commit. This involves substeps of querying the number of commits for the pull request through GitHub's GraphQL API, extracting the number of commits from the JSON response, and checking if the number is equal to 1.
+\item Check if the commit message conforms to the requirements of Angular-style conventional commits. The commit message is linted with the \emph{commitlint} tool, part of the previously mentioned Conventional Changelog Tools.
+\item After setting up the project's programming language environment and installing all necessary dependencies, perform code linting in order to verify that the submitted code conforms to the required code styling of Diplomatiq. The code is linted with language-dependant tools.
+\item Verify that the project can be built by creating a distribution deployment artefact.
+\item Run all unit, integration, and end-to-end tests of the project, if there are any.
+\item Scan the code with SonarQube, and upload the results to SonarCloud.
+\end{itemize}
 
-\subsection{Choosing the platform}
+If any of the above steps fails, the contrubition should be considered as faulty, and it should not be accepted into the mainline. Since all Diplomatiq projects are open-source, and GitHub Actions is offered free of charge for open-source projects, I usually run workflows incorporating the above steps against multiple platforms, operating systems, and multiple versions of programming language environments concurrently, without additional costs.
 
-CAA record!
+I also utilize GitHub Actions for continuous delivery. Most projects are configured in a way that pushing a tagged commit to the master branch triggers the release process. The process consists of producing and uploading a distribution build artefact to GitHub's permanent artefact storage, running all tests against all environments on the artefact, and if everything step is successful, deploying the artefact into the production infrastructure.
 
-Azure
-\subsection{Active Directory}
+\subsection{Code analysis with SonarCloud}
+
+SonarSource's SonarQube along with its cloud platform, SonarCloud are tools for inspecting code quality based on static code analysis. Both examine the code using the same configurable — and in case of SonarQube, extensible — analysis ruleset in order to detect bugs and security vulnerabilities. SonarQube is to be used in on-premise, SonarCloud is to be used in cloud-based development environments, and both can be included in continuous integration environments.
+
+As it is free to use for open-source development, I configured SonarCloud for most Diplomatiq projects. After creating the Diplomatiq organization on the platform, I imported the Diplomatiq's GitHub repositories into SonarCloud through an automated flow. I created a token for each project, which authenticates the project against SonarCloud's API when performing analyses and uploading results.
+
+SonarCloud introduces the concepts of \emph{quality profiles} and \emph{quality gates}. A quality profile is a set of language-dependant quality rules, which get applied against the codebase during an analysis. Profiles are categorized into four parts:
+
+\begin{enumerate}
+\item \emph{Bugs} are development errors which occasionally result in faulty software.
+\item \emph{Vulnerabilities} are pieces of code that causes the software to become vulnerable against attacks.
+\item \emph{Code smells} are bad coding practices which make the code harder to maintain.
+\item \emph{Security hotspots} are subject to become vulnerabilities if applied incorrectly.
+\end{enumerate}
+
+An example of a quality rule categorized as a bug in the Java quality profile is the reversion of the \textquote{not equals} operator (incorrectly using \lstinline{=!} instead of the correct \lstinline{!=}): the code compiles, but the operator does not produce the intended results. Quality profiles can be customized by including or excluding specific rules. When using SonarQube, new quality rules can also be implemented for several languages, but SonarCloud can not be extended with custom rules~\cite{sonar-custom-rules}. For Diplomatiq projects, I use the quality profiles recommended and maintained by SonarSource.
+
+A quality gate is a set of boolean conditions based on measurement values. Such conditions are not dependent on any language or platforms, since it formulates general measurements, such as code coverage should be kept above a specific percentage, the number of bugs should be equal to zero, or security rating should be the highest. A quality gate \textquote{lets through} code which complies with all its requirements. For Diplomatiq projects, I use a custom quality gate with the highest and strictest possible settings on the platform.
+
+As I configured SonarCloud to be part of the continuous integration workflows of Diplomatiq projects, only such pull requests can be merged into a Diplomatiq repository, which passes all requirements I set in SonarCloud. Since the CI rules of GitHub projects apply to me as well as any other future contributor, this enforces even me to write code with consistently high quality and 100\% test coverage\footnote{I always strive to produce high quality code and avoid bugs. However, SonarCloud helped me to notice two minor bugs so far, which were not reported by tests, not even with the 100\% test coverage.}.
+
+\section{Node Package Manager (NPM)}
+
+\subsection{Overview}
+
+The Node Package Manager (NPM) — part of an ecosystem built upon the JavaScript runtime environment Node.js — is a package manager for software written in JavaScript. NPM's online package registry containing public and private packages enables developers to download and re-use shared packages by incorporating them into their own software in a versioned manner, with the help of NPM's command line client. It has become the de-facto standard solution for sharing JavaScript software in the open-source community~\cite{herron2016node}.
+
+\subsection{Creating and securing an organization}
+
+I implemented several JavaScript libraries to be published as open-source software, but in Diplomatiq's name instead of my personal account. For this, I created an organization on NPM, similarly to GitHub. Organizations can publish packages in a scoped way: the name of the organization prefixed with a \textquote{@} character — the scope name — becomes the prefix of the package's name. The scope and the package name are separated with a \textquote{/} character. For example, the \lstinline{project-config} package published under the Diplomatiq organization gets finally named \lstinline{@diplomatiq/project-config}\footnote{NPM scopes can be lowercase only, so according to Diplomatiq's naming rules described in \Cref{section:naming}, the organization's scope has been \lstinline{@diplomatiq}.}.
+
+NPM offers no security policies for organizations. As a security measure, all I was able to do was to enable two-factor authentication in my account for publishing packages as well, as it was of course already enabled for authentication. This means that if I invite a user into Diplomatiq's NPM organization, they will be able to publish packages even if they do not have two-factor authentication enabled. This way, an attacker stealing the password of one of the organization's future accounts can easily compromise Diplomatiq packages. I contacted NPM's customer support about mitigating this future threat, and I was told that the functionality of organizational policies are on their development roadmap, expected to be released to production in the fourth quarter of 2020.
+
+\section{Communication and social media presence}
+
+\subsection{Gitter}
+
+I created a space for Diplomatiq on Gitter, a chat service for GitHub repositories and developers. The space was named Diplomatiq, according to the primary naming rule in \Cref{section:naming}. Gitter allows to create several chat rooms within Diplomatiq's space, corresponding to the repositories within Diplomatiq's GitHub organization. As advised in Diplomatiq's contributing guide, the Gitter space should be the primary place for discussing questions and problems regarding Diplomatiq projects. At the time of writing this thesis, I am the sole member of Diplomatiq's Gitter space, and there has been no communication in the chat rooms.
+
+\subsection{Slack}
+
+For future internal communication, I registered a workspace for Diplomatiq on Slack, one of today's most popular business communication platforms. The workspace was named Diplomatiq, but due to the \emph{diplomatiq.slack.com} domain being already taken, its domain name has been \emph{diplomatiqorg.slack.com}, according to the 4\textsuperscript{th} naming rule in \Cref{section:naming}. Even though the workspace is unused as I am its sole member, reserving \emph{diplomatiqorg.slack.com} ensures that the domain name will not be taken by another company. As a security measure, I made it mandatory for all future members to use two-factor authentication.
+
+\subsection{Facebook}
+
+I created and published a Facebook page for Diplomatiq, reserving the Facebook page path \emph{https://www.facebook.com/DiplomatiqOrg}, according to the 3\textsuperscript{rd} naming rule of \Cref{section:naming}. The page has no posts and contains no data, but I uploaded one of Diplomatiq's application icon as its profile picture, and the logo as its cover picture. In the future, I want to heavily build on Diplomatiq's Facebook presence for reaching the younger generation of Model United Nations.
+
+\section{Procuring the Neo4j database software}
+
+\subsection{Licensing overview}
+
+I chose the Neo4j graph database as the main database serving the Diplomatiq social network application. The reasons of my decision are detailed in \Cref{section:database}, this section focuses on licensing and the procurement of the database software.
+
+As already mentioned in \Cref{subsection:preliminaryneo4j}, Neo4j offers two software editions with different feature sets and licensing~\cite{neo4j-licensing}. The Community Edition is open source, available under the terms of the GPL v3 license. The Enterprise Edition offers four licensing options:
+
+\begin{itemize}
+\item The commercial license permits using the software in closed source applications as well, and is offered under a paid subscription agreement.
+\item The developer license permits free local development usage after registration.
+\item The evaluation license is a time-restricted variant of the commercial license, offering free usage for a fixed-term trial period.
+\item The startup license permits using the software for free for startups having at most 50 employees and \$3 million of annual revenue, but limits the number of database instances to 3 production, 3 staging, and 6 testing/development machines, each having 256 gigabytes of RAM and 24 processor cores at most~\cite{neo4j-startup-program}.
+\end{itemize}
+
+Besides the software itself, Neo Technology offers another approach for using their graph database: Neo4j Aura is a managed graph DBaaS\footnote{database as a service}, offering on-demand scaling, a capacity-based pricing construction, and clustering features for high availability.
+
+\subsection{Acquiring the startup license}
+
+After evaluating licensing options and the Neo4j Aura service, I decided that since Aura is too expensive for my current budget, I enroll in the startup program. This involved filling a registration form with personal data and information about the (prospective) company. Two days after submitting the form, I received the email with a license key for Neo4j Enterprise Edition. This enabled me to download and deploy the software onto Diplomatiq's server infrastructure.
+
+\section{Building and securing the server infrastructure}
+
+\subsection{Platform overview}
+
+In this section, I use the term server infrastructure to denote the various servers, software, networking solutions, and configurations that enables and supports the public operation of the Diplomatiq social network software system on the Internet (excluding DNS and emailing). Having relevant work experience in operating a production cloud server infrastructure, I had a concrete concept on Diplomatiq's demands on the short and on the run as well. The key aspects of choosing the platform were the following:
+
+\begin{itemize}
+\item It should provide strong cloud-based services with hybrid cloud\footnote{A hybrid cloud consists of cloud-based and on-premise infrastructure elements.} capabilities for later expansion into real-world diplomacy\footnote{According to my knowledge, governmental and diplomatic software often require on-premise solutions.}.
+\item It should provide strong PaaS\footnote{Platform-as-a-Service} capabilities, and also IaaS\footnote{Infrastructure-as-a-Service} solutions.
+\item It should provide options on data residency to comply with diplomatic requirements.
+\item It should offer a flexible pricing model, so I can start with a smaller, cheaper infrastructure, and scale it later as Diplomatiq's production workload grows.
+\item It should provide mature, integrated security solutions.
+\item It should provide affordable developer support.
+\end{itemize}
+
+Considering the above, I evaluated service offerings of Microsoft Azure, Google Cloud Platform, and Amazon Web Services. Google seems to lag behind on hybrid solutions, and also seems to be the worst from the financial aspect for Diplomatiq's use cases. Even though Amazon is the oldest cloud service, it seems to lack integrated data residency solutions. Microsoft seems to offer everything Diplomatiq will need in the long run, and it proved to be the best in terms of pricing, therefore I chose Microsoft Azure as Diplomatiq's cloud server infrastructure platform.
+
+\subsection{Creating a directory for Diplomatiq}
+
+\subsubsection{Overview}
+
+In enterprise infrastructures, the biggest organizational unit is usually called a \emph{directory}. A directory encompasses the entire organization with its users, computing resources, and often includes information about premises and office resources as well. In Microsoft Azure, a directory — also called \emph{directory tenant} — is managed via the service called Azure Active Directory (AD).
+
+\subsubsection{Creating a personal directory with my personal Azure account}
+
+I could not sign up to Azure by simultaneously creating a directory dedicated to Diplomatiq (I was later told by support that this is only possible by signing up through Microsoft salespersons, which I intentionally avoided). Instead, I needed to create a personal Microsoft account with my personal email address, which initialized my personal directory and set its domain name to \emph{luczsomagmail2559.onmicrosoft.com}, based on my email address.
+
+\subsubsection{Creating a directory dedicated to Diplomatiq}
+
+For Diplomatiq's own, dedicated directory, I needed to create a separate directory tenant from my personal directory. For Diplomatiq's dedicated directory tenant, I set Diplomatiq as the organization name, and as its initial domain name, I set \emph{diplomatiq.onmicrosoft.com}. As I created the new directory tenant from my personal Microsoft account, the \emph{global administrator} — the highest possible role able to manage all services and everything else in a directory — of the new tenant became my personal account.
+
+\subsubsection{Setting diplomatiq.org as the primary domain in Diplomatiq's directory}
+
+In order to be able to invite users with \emph{@diplomatiq.org} email addresses, the ownership of the \emph{diplomatiq.org} domain needed to be verified to Microsoft. I registered \emph{diplomatiq.org} as a custom domain name for the directory, and proved the administrative ownership of the domain by adding a Microsoft-provided identifier as a DNS TXT record. After I verified the domain, I set it as the primary directory domain, leaving \emph{diplomatiq.onmicrosoft.com} as a secondary one.
+
+\subsubsection{Creating a company Azure account and making it administrator}
+
+After Diplomatiq's domain name was verified in Azure, I was able to create a new user in Diplomatiq's dedicated directory with the \emph{soma.lucz@diplomatiq.org} email address. I assigned the global administrator role to this new account, making it administratively equivalent to my personal account.
+
+\subsubsection{Deleting the personal account}
+
+After I had completely set up Diplomatiq's dedicated directory and had configured its \emph{soma.lucz@diplomatiq.org} user to be a global administrator, there was no need for keeping my personal Azure account, so I deleted it from the directory. Later I deleted the account itself, which deleted its personal directory as well.
+
+\subsubsection{Further directory settings and security considerations}
+
+I performed further configuration to restrict future users' access within the directory in order to keep responsibilities limited and separated. I disabled user application registration, to disallow arbitrary users to issue application credentials accessing resources in the directory. I restricted the the access to the AD's administration portal, so users are not able to modify AD settings. I made it mandatory for all future users in the directory to use two-factor authentication.
+
 \subsection{Naming conventions}
-\subsection{Subscription and support subscription}
-\subsection{KeyVault}
-\subsection{Networking}
-\subsection{DB VM}
 
+Microsoft Azure has a detailed guide as part of its Cloud Adoption Framework on how to name management groups, subscriptions, resource groups, and resources themselves~\cite{azure-naming}. Since Azure does not allow to rename a resource after its creation, I wanted to establish a solid system of naming conventions. I downloaded the \emph{naming ang tagging convention tracking template} Excel table provided by Azure, and decided to stick to it. As the table does not contain conventions for all resource types, I sometimes needed to extend it with new rules. Henceforth every resource name I introduce was named according to Diplomatiq's naming conventions.
+
+\subsection{Creating a subscription and a support subscription}
+
+Within a directory — the largest organizational unit — there can be several management groups nested into each other, as the second level of resource organization. Management groups contain subscriptions (other management groups), within subscriptions there are resource groups, and resource groups consists of resources. Since I decided Diplomatiq only needs one subscription encomassing all resources, its directory would make no use of management groups.
+
+I set up the \emph{diplomatiq-prod-001} subscription paid by my credit card as a pay-as-you-go subscription. This allows me to pay for the resources I used in a time-based manner: the more resources I use (or the higher their pricing tiers are\footnote{Higher pricing tiers offer more features or higher performance.}), the more I pay. I additionally subscribed to the \emph{Developer support plan} later to resolve a networking issue with the Key Vault service.
+
+\subsection{Structuring resources}
+
+As part of its global infrastructure, Microsoft Azure provides services in more than 60 \emph{regions} worldwide. A region is a set of datacenters within a \emph{geography} (usually a country), which acts as a data residency boundary~\cite{azure-global-infrastructure}. Deploying infrastructure across several regions allows to build high-availability, low-latency systems — the closer the infrastructure is to the client, the quicker the content can be delivered.
+
+Regions are bound to resource groups. Since the current needs of Diplomatiq do not justify deploying multi-region services, I created only one resource group in the Microsoft's North Europe (Ireland) region, named \emph{rg-diplomatiq-prod-001}. All resources presented later were deployed into this resource group. I chose the North Europe region because it is one of the oldest and best-supported Azure regions, and it is also among the regions having the highest service coverage in the Azure infrastructure. Later this decision proved problematic: North Europe is also one of the most popular regions, and due to the heavy interest in cloud solutions raised by the COVID-19 pandemic, Microsoft introduced limitations on new infrastructure deployments. Because of this, initially I was not able to deploy a virtual machine for the Neo4j graph database.
+
+\subsection{Storing secrets and credentials securely}
+
+Maintaining an IT infrastructure involves dealing with several kinds of credentials, keys, and certificates. Most of these are highly sensitive secrets, and letting an attacker steal them could cause critical service disruption and permanent damage. Microsoft Azure offers its Key Vault service for storing secrets in a secure and audited manner, guarded by configurable access policies.
+
+The Key Vault service is offered in two tiers:
+
+\begin{itemize}
+\item The \emph{standard} tier provides all security and auditing functionality of the Key Vault service except for storing keys in Hardware Security Modules (HSMs)\footnote{As mentioned earlier, Hardware Security Modules are separate physical computers designed to keep cryptographic keys safe. They offer tamper resistance making it extremely difficult to extract and steal secret keys~\cite{fips-140-3}.}.
+\item The \emph{premium} tier provides the optional usage of Hardware Security Modules for storing keys, in addition to all features offered by the standard tier.
+\end{itemize}
+
+Diplomatiq's infrastructure incorporates several kinds of secrets, which I decided to store in the Key Vault. Since the two tiers' prices differ only minimally, I chose the premium tier, offering the optional usage of HSMs. I created two Key Vault instances. The \emph{kv-sslcerts-prod-001} instance stores TLS certificates necessary for secure communication with clients and across services. The \emph{kv-prodcreds-prod-001} instance stores everything else: database access credentials, database encryption keys, and API keys of integrated services.
+
+Key Vault access policies can be fine-tuned in various ways. Each entity within the directory can have a separate set of cryptographic access to Key Vault instances. I configured the access policies of the instances to be as strict as possible: application identities\footnote{Azure provides a built-in way to identify a service within a directory, called \emph{application identity}.} required to access entries as part of their normal operation are able to \emph{get} an entry by referencing it by its identifier, but they can not \emph{list} entries, and they have no write access at all. As an additional security measure on top of authenticated and audited access, the Key Vault instances are not reachable from the Internet, only from the specified internal subnet the backend services are deployed to.
+
+\subsection{Setting up the infrastructure for the website}
+
+\subsection{Setting up the infrastructure for the front end application}
+everything from keyvault
+
+\subsection{Setting up the infrastructure for the back end application}
+everything from keyvault
+
+\subsection{Database infrastructure}
+\label{section:database}
 neo4j dns a record
 
-\section{Infrastructure security}
-\subsection{Identity management}
-\subsection{Resource management}
-\subsection{Network security}
+\subsection{Networking and security}
 tűzfal, vnet rules, TLS mindenhol
-
-\subsection{Configuration security}
-everything from keyvault
