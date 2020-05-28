@@ -1,4 +1,4 @@
-\chapter{Building and securing a company-level production infrastructure}
+\chapter{Building and securing a company-level, production-grade infrastructure}
 \label{chapter:infrastructure}
 
 This chapter describes my approach of building and securing a production-grade infrastructure supporting the development, testing, and public operation of Diplomatiq.
@@ -73,7 +73,7 @@ Transport Layer Security (TLS) is a cryptographic protocol with the goal of prov
 
 For protecting web application users and web API\footnote{Application Programming Interfaces define interactions between softwares. In this context, a web API means a web-facing service, which serves data for client applications.} consumers on the Internet, a web server should serve its contents over TLS, e.g.\ over the HTTPS protocol, which is essentially HTTP over TLS. More and more web browser APIs require websites and web applications to be served over HTTPS~\cite{secure-context-features}.
 
-Authenticating the server involves a digital certificate, which proves the ownership of the server's \emph{public key}. The public key and its cryptographic key pair, the \emph{private key} are involved in the cryptographic key handshake of TLS, resulting in a symmetric key for encrypting data in transit. Certificates are issued to one or more specific domain names, cryptographically signed by a trusted third party called a Certificate Authority (CA)\footnote{For the sake of compactness, I will not go into the endless details of the X.509 certificate infrastructure and the underlying public-key cryptography in this thesis.}. Acquiring such a certificate requires proving the ownership of the domain names in question. \emph{Non-wildcard certificates} only certify domain names they were issued to, whereas \emph{wildcard certificates} certify given domains and all their immediate subdomains.
+Authenticating the server involves a digital certificate, which proves the ownership of the server's \emph{public key}. The public key and its cryptographic key pair, the \emph{private key} are involved in the cryptographic key handshake of TLS, resulting in a symmetric key for encrypting data in transit. Certificates are issued to one or more specific domain names, cryptographically signed by a trusted third party called a Certificate Authority (CA).\footnote{For the sake of compactness, I will not go into the endless details of the X.509 certificate infrastructure and the underlying public-key cryptography in this thesis.} Acquiring such a certificate requires proving the ownership of the domain names in question. \emph{Non-wildcard certificates} only certify domain names they were issued to, whereas \emph{wildcard certificates} certify given domains and all their immediate subdomains.
 
 \subsection{Purchasing a TLS certificate}
 
@@ -115,7 +115,7 @@ Sending emails over the Internet is inherently insecure, as the design of the co
 
 The Sender Policy Framework (SPF) was designed to detect if the sender address of an email was forged by a party outside the sender's domain. The framework's operation is based on a DNS TXT record\footnote{The SPF record has a specific format, which is defined in RFC 7208~\cite{rfc7208}.} indicating the host or IP address of email servers authorized to send emails originating from the domain. Besides authorized servers, the record also includes instructions for recipient servers and clients on what to do with detected forgeries: such emails can either be forwarded to the recipient's mailbox tagged as spam, or rejected and not delivered. Diplomatiq's SPF policy is configured by Namecheap and SendGrid based on my settings, and it commands to reject emails detected as forgeries.
 
-The DomainKeys Identified Mail (DKIM) Signatures scheme offers similar email sender forgery detection capabilities as the Sender Policy Framework, but also it provides additional assurances supported by public-key cryptography. For utilizing DKIM, the sender server needs to cryptographically sign outgoing emails with a private key, and the domain's administrators need to publish the server's corresponding public key in a DNS TXT record\footnote{The DKIM record contains additional information besides the key itself. The format of the record is specified by RFC 6376~\cite{rfc6376}.}. Recipient email servers and clients can check the authenticity of an email by looking up the sender domain's public DKIM key then verifying the DKIM signature attached to the email\footnote{DKIM signatures are usually verified by email clients rather than end-users, thus the signatures are generally not visible as part of the email.} with the public key. On the one hand, a valid DKIM signature cryptographically guarantees that the email was sent from an authorized party, and on the other hand, it also verifies that the email was not modified in transit. I configured the DKIM records of Diplomatiq to be automatically managed by Namecheap and SendGrid.
+The DomainKeys Identified Mail (DKIM) Signatures scheme offers similar email sender forgery detection capabilities as the Sender Policy Framework, but also it provides additional assurances supported by public-key cryptography. For utilizing DKIM, the sender server needs to cryptographically sign outgoing emails with a private key, and the domain's administrators need to publish the server's corresponding public key in a DNS TXT record.\footnote{The DKIM record contains additional information besides the key itself. The format of the record is specified by RFC 6376~\cite{rfc6376}.} Recipient email servers and clients can check the authenticity of an email by looking up the sender domain's public DKIM key then verifying the DKIM signature attached to the email\footnote{DKIM signatures are usually verified by email clients rather than end-users, thus the signatures are generally not visible as part of the email.} with the public key. On the one hand, a valid DKIM signature cryptographically guarantees that the email was sent from an authorized party, and on the other hand, it also verifies that the email was not modified in transit. I configured the DKIM records of Diplomatiq to be automatically managed by Namecheap and SendGrid.
 
 The Domain-based Message Authentication, Reporting and Conformance (DMARC) protocol extends SPF and DKIM by allowing domain administrators to explicitly indicate that emails are to be authenticated by SPF or DKIM or both, and to instruct email recipient clients to behave in a specific way when any or all authentications fail, such as rejecting the message, or putting it in quarantine. DMARC also offers a reporting mechanism, which sends reports about authentication failures to a specified email address. Reports can be daily aggregates or real-time \textquote{forensic} reports including detailed data about each failures, or both. Diplomatiq's DMARC policy is set to the strictest: emails not passing all checks should not be delivered to the recipient's inbox. For receiving and analyzing aggregate reports, I use an external tool, called Dmarcian~\cite{dmarcian-website}. DNSSEC prevents the unauthorized modification of Diplomatiq's SPF, DKIM and DMARC policies.
 
@@ -172,14 +172,14 @@ EditorConfig helps maintain consistent coding styles for multiple developers wor
 
 \subsubsection{Security policy}
 
-Since exploiting security vulnerabilities can lead to catastrophic consequences like data breaches or loss of data, security issues are to be handled carefully and discreetly. A security policy establishes rules and methods for reporting a security issue in a development project to the maintainers without causing any harm. Diplomatiq's security policy requires contributors to report found security issues to the \emph{security@diplomatiq.org} email address, possibly encrypted with Diplomatiq's public PGP key\footnote{Diplomatiq's public PGP key is available on the https://www.diplomatiq.org/pgp-key.txt URL.}.
+Since exploiting security vulnerabilities can lead to catastrophic consequences like data breaches or loss of data, security issues are to be handled carefully and discreetly. A security policy establishes rules and methods for reporting a security issue in a development project to the maintainers without causing any harm. Diplomatiq's security policy requires contributors to report found security issues to the \emph{security@diplomatiq.org} email address, possibly encrypted with Diplomatiq's public PGP key.\footnote{Diplomatiq's public PGP key is available on the https://www.diplomatiq.org/pgp-key.txt URL.}
 
 \subsection{Development and release model}
 
 In most of Diplomatiq's repositories, I use the a modified version of the GitFlow workflow~\cite{gitflow}. In essence, the workflow operates on four types of branches in a repository:
 
 \begin{enumerate}
-\item The \emph{master} branch is stable, and should be kept stable at all times. Code gets merged into the master branch only from a \emph{release} branch, immediately before a new version of the software is released into production\footnote{As described later, most Diplomatiq projects are configured in a way that merging a tagged commit into the master branch triggers the continuous delivery flow and deploys the version into production.}. Contributors can not push code directly onto this branch, but administrators can.
+\item The \emph{master} branch is stable, and should be kept stable at all times. Code gets merged into the master branch only from a \emph{release} branch, immediately before a new version of the software is released into production.\footnote{As described later, most Diplomatiq projects are configured in a way that merging a tagged commit into the master branch triggers the continuous delivery flow and deploys the version into production.} Contributors can not push code directly onto this branch, but administrators can.
 \item The \emph{develop} branch is part of the repository's regular development flow. When creating feature branches, contributors branch from develop, and the target of contributional pull requests is the develop branch. Contributors can not push code directly onto this branch, but administrators can.
 \item The \emph{feature/*} branches are also parts of the regular development flow. Contributors develop their contributions on feature branches, regardless of the contribution's type (feature, bugfix, refactor, etc.). Contributional pull requests are created from feature branches targeting develop.
 \item The \emph{release/*} branches are created when a release candidate is being prepared, by branching from develop. Release-related code changes like version bumps, changelog generation and release hotfixes are committed onto the release candidate's release branch, and eventually the finalized release candidate is tagged. After conducting all necessary testing on the release candidate, the release branch is merged into master, then it is immediately released into production by continuous delivery. After the deployment finished, the release branch is merged into develop. Contributors can not push code directly onto release branches, but administrators can.
@@ -202,7 +202,7 @@ As Diplomatiq's development and release model features both conventional commits
 
 As development and release processes become more and more automated, the time frame required for releasing new software versions reduces. With continuous delivery, pushing new code into the remote repository often means that the code is released to production without further developer interaction, after all necessary automated tests pass. This results in the need of more frequent dependency updates as well. Maintainers can either check and update every dependency manually, or they can apply automated solutions.
 
-I have configured Dependabot for the automatic maintenance of dependencies across Diplomatiq projects. Dependabot is a GitHub-owned, integrated tool for watching package managers like NPM and Maven, continuously checking for new versions published. I set up Dependabot in a way that if it detects one of the dependencies in Diplomatiq projects having a new version released, it opens a pull request in the related project with the dependency update. This automated workflow frees me from a lot of manual work, and also ensures that the dependencies of Diplomatiq projects are always up to date. Pull requests containing security-related updates are separately tagged, allowing me to handle them with higher priority. As I do not want to lose the ability of reviewing dependency updates, merging pull requests opened by Dependabot is not automated. But since continuous integration workflows are applied to all pull requests, all checks and tests defined in the repository are run for Dependabot's updates as well as for any other contribution.
+I configured Dependabot for the automatic maintenance of dependencies across Diplomatiq projects. Dependabot is a GitHub-owned, integrated tool for watching package managers like NPM and Maven, continuously checking for new versions published. I set up Dependabot in a way that if it detects one of the dependencies in Diplomatiq projects having a new version released, it opens a pull request in the related project with the dependency update. This automated workflow frees me from a lot of manual work, and also ensures that the dependencies of Diplomatiq projects are always up to date. Pull requests containing security-related updates are separately tagged, allowing me to handle them with higher priority. As I do not want to lose the ability of reviewing dependency updates, merging pull requests opened by Dependabot is not automated. But since continuous integration workflows are applied to all pull requests, all checks and tests defined in the repository are run for Dependabot's updates as well as for any other contribution.
 
 \subsection{Continuous integration and continuous delivery}
 
@@ -227,7 +227,7 @@ Although different projects require different CI workflows, I have established t
 
 If any of the above steps fails, the contrubition should be considered as faulty, and it should not be accepted into the mainline. Since all Diplomatiq projects are open-source, and GitHub Actions is offered free of charge for open-source projects, I usually run workflows incorporating the above steps against multiple platforms, operating systems, and multiple versions of programming language environments concurrently, without additional costs.
 
-I also utilize GitHub Actions for continuous delivery. Most projects are configured in a way that pushing a tagged commit to the master branch triggers the release process. The process consists of producing and uploading a distribution build artefact to GitHub's permanent artefact storage, running all tests against all environments on the artefact, and if everything step is successful, deploying the artefact into the production infrastructure.
+I also utilize GitHub Actions for continuous delivery. Most projects are configured in a way that pushing a tagged commit to the master branch triggers the release process. The process consists of producing and uploading a distribution build artefact to GitHub's permanent artefact storage, running all tests against all environments on the artefact, and if every step is successful, deploying the artefact into the production infrastructure.
 
 \subsection{Code analysis with SonarCloud}
 
@@ -248,7 +248,7 @@ An example of a quality rule categorized as a bug in the Java quality profile is
 
 A quality gate is a set of boolean conditions based on measurement values. Such conditions are not dependent on any language or platforms, since it formulates general measurements, such as code coverage should be kept above a specific percentage, the number of bugs should be equal to zero, or security rating should be the highest. A quality gate \textquote{lets through} code which complies with all its requirements. For Diplomatiq projects, I use a custom quality gate with the highest and strictest possible settings on the platform.
 
-As I configured SonarCloud to be part of the continuous integration workflows of Diplomatiq projects, only such pull requests can be merged into a Diplomatiq repository, which passes all requirements I set in SonarCloud. Since the CI rules of GitHub projects apply to me as well as any other future contributor, this enforces even me to write code with consistently high quality and 100\% test coverage\footnote{I always strive to produce high quality code and avoid bugs. However, SonarCloud helped me to notice two minor bugs so far, which were not reported by tests, even with 100\% test coverage.}.
+As I configured SonarCloud to be part of the continuous integration workflows of Diplomatiq projects, only such pull requests can be merged into a Diplomatiq repository, which passes all requirements I set in SonarCloud. Since the CI rules of GitHub projects apply to me as well as any other future contributor, this enforces even me to write code with consistently high quality and 100\% test coverage.\footnote{I always strive to produce high quality code and avoid bugs. However, SonarCloud helped me to notice two minor bugs so far, which were not reported by tests, even with 100\% test coverage.}
 
 \section{Node Package Manager (NPM)}
 
@@ -304,7 +304,7 @@ After evaluating licensing options and the Neo4j Aura service, I decided that si
 In this section, I use the term server infrastructure to denote the various servers, software, networking solutions, and configurations that enables and supports the public operation of the Diplomatiq social network software system on the Internet (excluding DNS and emailing). Having relevant work experience in operating a production cloud server infrastructure, I had a concrete concept on Diplomatiq's demands on the short and on the run as well. The key aspects of choosing the platform were the following:
 
 \begin{itemize}
-\item It should provide strong cloud-based services with hybrid cloud\footnote{A hybrid cloud consists of cloud-based and on-premise infrastructure elements.} capabilities for later expansion into real-world diplomacy\footnote{According to my knowledge, governmental and diplomatic software often require on-premise solutions.}.
+\item It should provide strong cloud-based services with hybrid cloud\footnote{A hybrid cloud consists of cloud-based and on-premise infrastructure elements.} capabilities for later expansion into real-world diplomacy.\footnote{According to my knowledge, governmental and diplomatic software often require on-premise solutions.}
 \item It should provide strong PaaS\footnote{Platform-as-a-Service} capabilities, and also IaaS\footnote{Infrastructure-as-a-Service} solutions.
 \item It should provide options on data residency to comply with diplomatic requirements.
 \item It should offer a flexible pricing model, so I can start with a smaller, cheaper infrastructure, and scale it later as Diplomatiq's production workload grows.
@@ -326,11 +326,11 @@ I could not sign up to Azure by simultaneously creating a directory dedicated to
 
 \subsubsection{Creating a directory dedicated to Diplomatiq}
 
-For Diplomatiq's own, dedicated directory, I needed to create a separate directory tenant from my personal directory. For Diplomatiq's dedicated directory tenant, I set Diplomatiq as the organization name, and as its initial domain name, I set \emph{diplomatiq.onmicrosoft.com}. As I created the new directory tenant from my personal Microsoft account, the \emph{global administrator} — the highest possible role able to manage all services and everything else in a directory — of the new tenant became my personal account.
+For Diplomatiq's own, dedicated directory, I needed to create a separate directory tenant from my personal directory. For this dedicated directory tenant, I set Diplomatiq as the organization name, and as its initial domain name, I set \emph{diplomatiq.onmicrosoft.com}. As I created the new directory tenant from my personal Microsoft account, the \emph{global administrator} — the highest possible role able to manage all services and everything else in a directory — of the new tenant became my personal account.
 
 \subsubsection{Setting diplomatiq.org as the primary domain in Diplomatiq's directory}
 
-In order to be able to invite users with \emph{@diplomatiq.org} email addresses, the ownership of the \emph{diplomatiq.org} domain needed to be verified to Microsoft. I registered \emph{diplomatiq.org} as a custom domain name for the directory, and proved the administrative ownership of the domain by adding a Microsoft-provided identifier as a DNS TXT record. After I verified the domain, I set it as the primary directory domain, leaving \emph{diplomatiq.onmicrosoft.com} as a secondary one.
+In order to be able to invite users with \emph{@diplomatiq.org} email addresses, the ownership of the \emph{diplomatiq.org} domain needed to be verified to Microsoft. I registered \emph{diplomatiq.org} as a custom domain name for the directory, and proved the administrative ownership of the domain by adding a Microsoft-provided identifier as a DNS TXT record. After the verification, I set the domain to be the primary one, leaving \emph{diplomatiq.onmicrosoft.com} as a secondary directory domain.
 
 \subsubsection{Creating a company Azure account and making it administrator}
 
@@ -346,28 +346,28 @@ I performed further configuration to restrict future users' access within the di
 
 \subsection{Naming conventions}
 
-Microsoft Azure has a detailed guide as part of its Cloud Adoption Framework on how to name management groups, subscriptions, resource groups, and resources themselves~\cite{azure-naming}. Since Azure does not allow to rename a resource after its creation, I wanted to establish a solid system of naming conventions. I downloaded the \emph{naming ang tagging convention tracking template} Excel table provided by Azure, and decided to stick to it. As the table does not contain conventions for all resource types, I sometimes needed to extend it with new rules. Henceforth every resource name I introduce was named according to Diplomatiq's naming conventions.
+Microsoft Azure has a detailed guide as part of its Cloud Adoption Framework on how to name management groups, subscriptions, resource groups, and resources themselves~\cite{azure-naming}. Since Azure does not allow to rename a resource after its creation, I wanted to establish a solid system of naming conventions. I downloaded the naming ang tagging convention tracking template provided by Azure, and decided to stick to it. As the table does not contain conventions for all resource types, I sometimes needed to extend it with new rules. Henceforth every resource name I introduce was named according to Diplomatiq's naming conventions.
 
 \subsection{Creating a subscription and a support subscription}
 
-Within a directory — the largest organizational unit — there can be several management groups nested into each other, as the second level of resource organization. Management groups contain subscriptions (other management groups), within subscriptions there are resource groups, and resource groups consists of resources. Since I decided Diplomatiq only needs one subscription encomassing all resources, its directory would make no use of management groups.
+Within a directory — the largest organizational unit — there can be several management groups nested into each other, as the second level of resource organization. Management groups contain subscriptions (or other management groups), within subscriptions there are resource groups, and resource groups consists of resources. Since I decided Diplomatiq only needs one subscription to encompass all resources, its directory would make no use of management groups.
 
 I set up the \emph{diplomatiq-prod-001} subscription paid by my credit card as a pay-as-you-go subscription. This allows me to pay for the resources I used in a time-based manner: the more resources I use (or the higher their pricing tiers are\footnote{Higher pricing tiers offer more features or higher performance.}), the more I pay. I additionally subscribed to the \emph{Developer support plan} later to resolve a networking issue with the Key Vault service.
 
 \subsection{Structuring resources}
 
-As part of its global infrastructure, Microsoft Azure provides services in more than 60 \emph{regions} worldwide. A region is a set of datacenters within a \emph{geography} (usually a country), which acts as a data residency boundary~\cite{azure-global-infrastructure}. Deploying infrastructure across several regions allows to build high-availability, low-latency systems — the closer the infrastructure is to the client, the quicker the content can be delivered.
+As part of its global infrastructure, Microsoft Azure provides services in more than 60 \emph{regions} worldwide. A region is a set of datacenters within a \emph{geography} (usually a country), which acts as a data residency boundary~\cite{azure-global-infrastructure}. Deploying infrastructure elements across several geographies allows building high-availability, low-latency systems — the closer the infrastructure is to the client, the quicker the content can be delivered over the Internet.
 
 Regions are bound to resource groups. Since the current needs of Diplomatiq do not justify deploying multi-region services, I created only one resource group in the Microsoft's North Europe (Ireland) region, named \emph{rg-diplomatiq-prod-001}. All resources presented later were deployed into this resource group. I chose the North Europe region because it is one of the oldest and best-supported Azure regions, and it is also among the regions having the highest service coverage in the Azure infrastructure. Later this decision proved problematic: North Europe is also one of the most popular regions, and due to the heavy interest in cloud solutions raised by the COVID-19 pandemic, Microsoft introduced limitations on new infrastructure deployments. Because of this, initially I was not able to deploy a virtual machine for the Neo4j graph database.
 
 \subsection{Securely storing secrets and credentials}
 
-Maintaining an IT infrastructure involves dealing with several kinds of credentials, keys, and certificates. Most of these are highly sensitive secrets, and letting an attacker steal them could cause critical service disruption and permanent damage. Microsoft Azure offers its Key Vault service for storing secrets in a secure and audited manner, guarded by configurable access policies.
+Maintaining an IT infrastructure involves dealing with several kinds of credentials, keys, and certificates. Most of these are highly sensitive secrets; letting an attacker steal them could cause critical service disruption or even permanent damage. Microsoft Azure offers its Key Vault service for storing secrets in a secure and audited manner, guarded by configurable access policies.
 
 The Key Vault service is offered in two tiers:
 
 \begin{itemize}
-\item The \emph{standard} tier provides all security and auditing functionality of the Key Vault service except for storing keys in Hardware Security Modules (HSMs)\footnote{As mentioned earlier, Hardware Security Modules are separate physical computers designed to keep cryptographic keys safe. They offer tamper resistance making it extremely difficult to extract and steal secret keys~\cite{fips-140-3}.}.
+\item The \emph{standard} tier provides all security and auditing functionalities of the Key Vault service, except for storing keys in Hardware Security Modules (HSMs).\footnote{As mentioned earlier, Hardware Security Modules are separate physical computers designed to keep cryptographic keys safe. They offer tamper resistance making it extremely difficult to extract and steal secret keys~\cite{fips-140-3}.}
 \item The \emph{premium} tier provides the optional usage of Hardware Security Modules for storing keys, in addition to all features offered by the standard tier.
 \end{itemize}
 
@@ -377,15 +377,137 @@ Key Vault access policies can be fine-tuned in various ways. Each entity within 
 
 \subsection{Setting up the infrastructure for the website}
 
+\subsubsection{Overview}
+
+Diplomatiq's website can be reached on the address \emph{www.diplomatiq.org}. I created the website for conducting future marketing operations, and to introducing the company. The website is separated from the Diplomatiq application itself, available on \emph{app.diplomatiq.org}.
+
+Serving a website over the Internet requires a public-facing webserver or — if the website consists of only static elements without application logic implemented on the server — a serverless, static web storage. Both approaches have benefits: running a webserver allows a deeper level of configuration, but a static web storage can more easily be replicated around to world to enable serving websites with lower latency. Due to lack of important security capabilities of static web storage technologies in Azure — e.g. adding headers for implementing Content Security Policy\footnote{Content Security Policy is an important security measure for websites and web application, mitigating certain types of attacks, such as Cross-Site Scripting (XSS)~\cite{csp-mdn}.} —, I decided that the website infrastructure should be implemented on a webserver-based approach.
+
+Microsoft Azure provides a mature Platform-as-a-Service (PaaS) technology called \emph{App Service}. In contrast to Infrastructure-as-a-Service (IaaS), one does not need to maintain the infrastructure itself when using a PaaS: the underlying computers are abstracted, and the operating system and server software are continuously updated. App Services are essentially managed PaaS infrastructures with built-in scaling, load balancing, and security features. As I have relevant work experience on the maintenance of production App Services, I decided to use an App Service for serving Diplomatiq's website.
+
+\subsubsection{Creating a suitable App Service Plan}
+
+Azure requires having an App Service Plan for deploying App Services. While App Services are in essence instances of web applications (consisting of multiple actual servers and infrastructure, which is abstracted and invisible to the user), App Service Plans can be described as server farms, which can comprise several App Services. App Service Plans are offered in several pricing tiers, each providing different hardware — either in a shared or isolated virtualized environment — with differing performance, and varying features.
+
+I created an App Service Plan named \emph{plan-diplomatiq-prod-001}, and determined its pricing tier based on the following criteria:
+
+\begin{itemize}
+\item It should support HTTPS. Since all pricing tiers support HTTPS, this requirement does not exclude any tiers.
+\item It should support adding custom domain names, so the application can be served from \emph{diplomatiq.org} instead of a domain name ending with \emph{azurewebsites.net}. This excludes smaller tiers targeted for development or testing usage.
+\item It should support multiple deployment slots\footnote{A deployment slot is a separated instance of the same web application available under the same domain name. The \emph{production} slot gets served by default, and the other slots can be visited by sending a cookie along the request, which instructs the load balancer in front of the slots to route the request to the targeted one.} for conducting testing in production\footnote{Testing in production involves running the System Under Test (SUT) under the same conditions as the SUT runs normally in the production environment.}, and swap-based, zero-downtime deployment.\footnote{With swap-based deployments, a new version is deployed into another deployment slot, then the slot gets swapped with the production slot to receive all incoming traffic, without downtime.}
+\end{itemize}
+
+The cheapest tier supporting the required features listed above was the smallest tier targeted for production use, called S1, therefore I chose this for \emph{plan-diplomatiq-prod-001}.
+
+\subsubsection{Creating and configuring the App Service}
+
+I created an App Service for the website named \emph{app-diplomatiqwebsite-prod-001}, and deployed it into the \emph{plan-diplomatiq-prod-001} App Service Plan. I configured it to be reachable under the \emph{diplomatiq.org} and \emph{www.diplomatiq.org} domain names. This involved adding a CNAME DNS record for the \emph{www} subdomain with a value specified by Azure, and an A DNS record for the apex domain, pointing to the public IP address of the App Service.
+
+I chose the \emph{canonical domain name} of Diplomatiq's website to be the \emph{www.diplomatiq.org}. Due to security, load-balancing and administrational issues, choosing a canonical name and sticking to it is an important aspect of maintaining a web application~\cite{mdn-canonical-domain, bjorn-canonical-domain}. I configured the platform in a way that requests targeting the \emph{diplomatiq.org} apex domain also reach the web server, but the server should issue a \emph{permanent redirect} to \emph{www.diplomatiq.org} with the HTTP status code 301 in this case.
+
+After setting up the domain names, I configured the App Service's TLS settings. I configured the webserver to mandate clients to use HTTPS with the 1.2 version of the underlying TLS protocol\footnote{Mandating the client to use HTTPS means that requests using the HTTP protocol are redirected to \emph{https://www.diplomatiq.org} with a \emph{permanent redirect} having HTTP status code 301. It also means configuring HSTS properly, described later.}. In order to use HTTPS, I needed to provide the previously introduced Sectigo TLS certificate issued to the \emph{diplomatiq.org} and \emph{www.diplomatiq.org} domains. I uploaded the certificate along with its password-protected private key into the \emph{kv-sslcerts-prod-001} Key Vault, and used the automated attachment process to bind them to the App Service.
+
+\subsubsection{Zero-downtime deployment}
+
+At this point, the infrastructure for securely serving a website was ready. In order to be able to deploy new application versions without downtime, I cloned the default \emph{production} deployment slot with all its settings, and created a \emph{staging} slot. With the swap-based deployment process provided by App Services, new website versions can be deployed onto the staging slot, and — as the users' incoming requests are routed to the production slot by default — the staging slot can be reconfigured then restarted according to the new version's demands, without causing service disruption. After the necessary reconfiguration is finished, and the staging slot's server instances are warmed up for receiving production workload, the staging slot can be swapped into production without downtime. The automated swap operation essentially consists of modifying the configuration of the slots' load balancers to route incoming production traffic to the new slot. This reconfiguration is performed without restarting any infrastructure elements, thus without downtime.
+
+The deployment itself is performed as part of the continuous delivery workflow introduced earlier. Azure provides a set of configurable actions (as in GitHub Actions) to be incorporated into automated deployment procedures. I integrated such an action into the website's deployment workflow, which automatically deploys the built artefact into Azure. The deployment is authenticated with the App Service's publish profile, which is embedded into the repository as a GitHub encrypted secret~\cite{github-encrypted-secrets}.
+
+\subsubsection{HTTP Strict Transport Security (HSTS) preloading}
+
+Compatibility reasons justify that webservers also serve entry points for web applications over HTTP as well as HTTPS, so a user visiting e.g. \emph{http://www.diplomatiq.org} (note the usage of HTTP instead of HTTPS) is eventually redirected to the website instead of receiving an error. The primary and only goal of HTTP entry points should be to redirect the user to the HTTPS entry point of the application. The \emph{HTTP Strict Transport Security (HSTS)} browser mechanism furthers this approach by allowing servers to specify a \lstinline{Strict-Transport-Security} header in their response, instructing the browser to permanently remember that the site should only be visited over HTTPS in the future~\cite{garron2013state}. If an HSTS entry exists in the browser for a given site, and the user tries to visit the site over HTTP, the browser automatically upgrades the connection to HTTPS, before even making an actual request to the site.
+
+HSTS is based on the \emph{trust on first use} principle, meaning its protection only applies after a user visited the site the at least once. This means that if an attacker hijacks the very first HTTP request a user made to a site, they can impersonate the server and serve malicious content to the user~\cite{rfc6977}. Major web browsers, such as Google Chrome, Mozilla Firefox, Apple's Safari, Microsoft Internet Explorer 11 and Microsoft Edge solve this problem by packaging a HSTS preload list into the web browser application: the list specifies sites supporting HSTS~\cite{hstspreload}.
+
+I have enabled HSTS for all Internet-facing Diplomatiq services, and also added the \emph{diplomatiq.org} domain name (and implicitly all its subdomains) to Google Chrome's HSTS preload list.\footnote{The automated submission process can be initiated on https://hstspreload.org.} Most major web browsers build their own lists upon this list~\cite{hstspreload}.
+
 \subsection{Setting up the infrastructure for the front end application}
-everything from keyvault
+
+\subsubsection{Overview}
+
+In terms of infrastructure requirements, Diplomatiq's front end application is very similar to the website. Since the application is a single-page client application, it does not need any back end logic, apart from routing and security capabilities. I created the same infrastructure with the same configuration for the front end application as for the website. It is hosted by an App Service in the same App Service Plan as the website, and its deployment model is also the same as the website's. There are two differences: it is served under a different subdomain, and it has one more deployment slot besides production and staging.
+
+\subsubsection{Subdomain settings, acquiring a new TLS certificate}
+
+I set up the resource to be served under the \emph{app.diplomatiq.org} domain name. Similarly to the website, this involved adding a CNAME DNS record for \emph{app.diplomatiq.org} with a value provided by Azure. As the Sectigo TLS certificate is issued to the \emph{diplomatiq.org} and the \emph{www.diplomatiq.org} domain names, it can not be applied to this resource. For being able to serve the application over HTTPS, I needed to acquire a new TLS certificate for its subdomain. Via a fully automated process, I created a managed TLS certificate offered by the App Service\footnote{Azure managed TLS certificates are issued by DigiCert~\cite{digicert-website}, thus I needed to add another CAA record to Diplomatiq's DNS settings to allow DigiCert issuing a certificate to \emph{app.diplomatiq.org}.}, saved it into the \emph{kv-sslcerts-prod-001} Key Vault, then attached it to the App Service. As their name suggests, managed certificates are automatically managed and renewed by Azure~\cite{managed-certificates}, freeing me from further maintenance tasks related to TLS.
+
+\subsubsection{Deployment slots}
+
+As detailed earlier, the development model of Diplomatiq features a branch named \emph{develop} as its semi-stable mainline branch for day-to-day development. Besides the \emph{production} and \emph{staging} slots, I created a deployment slot named \emph{develop} as well. After a pull request is merged into the develop branch in the front end project's repository, the develop branch is automatically released to the develop deployment slot. This is similar to the concept of nightly builds, only in this case updates can happen more frequently, as more pull requests are merged into the develop branch.
 
 \subsection{Setting up the infrastructure for the back end application}
-everything from keyvault
+
+\subsubsection{Overview}
+
+The back end application of the Diplomatiq social network is exposed to clients by an API available over HTTPS. The API and the application itself will be detailed in \Cref{chapter:diplomatiq}, but since the application needs a Java runtime environment, it evidently needs a webserver as well, which forwards the incoming requests to the application. Similarly to the website and the front end, I decided to use an App Service for hosting the back end application.
+
+\subsubsection{Subdomain settings and another new TLS certificate}
+
+I set up the resource to be served under \emph{api.diplomatiq.org} domain. As the Sectigo TLS certificate can not be applied to this resource either, I created a managed TLS certificate and saved it into the \emph{kv-sslcerts-prod-001} Key Vault via the same process I already mentioned.
+
+\subsubsection{Deployment slots}
+
+The application features the same three-slots deployment model as the front end application, with the same naming and same semantics.
+
+\subsubsection{Securing configuration values and production credentials}
+
+The maintenance of a back end server application often involve managing configuration values and secrets, such as encryption and API keys, and database access credentials. The naive and catastrophically insecure way of managing secrets is embedding them in the code, allowing attackers to harvest and exploit them~\cite{secretsinsourcecodes, meli2019bad}. Besides security issues, embedding secrets or infrastructure configuration in the code leads to a tight coupling between the infrastructure and the application, and it causes that the application needs to be redeployed in case of key rollovers or infrastructural changes. For mitigating security threats and tight coupling, I embedded neither configuration values, nor secrets into the application's code base — apart from the \textquote{dummy} secrets, which make local development easier. Instead, I use all such values referenced as environment variables.
+
+In Azure, App Services' environment variables can be set on the service's graphical management interface, or their values can be provided by code-based application configuration\footnote{There are more advanced, more scalable solutions, such as the Azure App Configuration service~\cite{azure-app-config}, which I did not use and do not detail in this thesis.}. Providing environment variable values in code would be against the point, since that code would still be committed into the repository. Therefore I set all such environment variables on the App Service management interface.
+
+App Services offer another level of secret abstraction by referencing Key Vault entries in environment variables. App Services substitute specially formatted reference strings found in environment variables with the actual value of the referenced Key Vault entry \emph{at runtime}. This way, sensitive secrets are not copy-pasted between services, and stored only one, centralized and audited, secure location.
+
+When configuring the back end service, I placed insensitive configuration values (such as the database's name, URI and username) directly into environment variables, but sensitive secrets (such as the password and data encryption keys of the database, and the API key for SendGrid) are referenced values stored in the \emph{kv-prodcreds-prod-001} Key Vault.
+
+\subsubsection{Creating multiple isolated back end environments}
+
+I created two separated back end environments in order to be able to conduct safe testing, without compromising user data. The \emph{production} environment encompasses the back end application instances running on the production and staging deployment slots, storing data in the \emph{diplomatiqbackend-production} database. The \emph{development} environment comprises the instance running in the develop slot, and it stores data in the \emph{diplomatiqbackend-develop} database. Even though the two environments are not completely isolated from each other, as the two databases are stored on the same virtual machine, this way the \emph{development} environment can be regarded as a sandbox, which can not cause any harm to the \emph{production} environment. Storing configuration values separated from application code made supports the concept of multiple deployment environments well, since this way the exact same application can be deployed into both environments without needing compile-time reconfiguration.
 
 \subsection{Setting up the database infrastructure}
 \label{section:database}
-neo4j dns a record
+
+\subsubsection{Overview}
+
+Apart from Neo Technologies' own database service provider called Neo4j Aura~\cite{neo4j-aura}, no cloud service providers offer Neo4j in a database-as-a-service construction. For using Neo4j, I needed to purchase a virtual machine, install, configure and secure Neo4j Enterprise Edition, set up the databases, and perform the required network and access configuration across the back end service and the database machine.
+
+\subsubsection{Procuring the virtual machine}
+
+As I mentioned earlier, last months' high interest in cloud computing caused by the COVID-19 pandemic put a heavy load onto one of Azure's most popular regions, North Europe, where Diplomatiq's infrastructure is hosted. Microsoft introduced restrictions on new infrastructure deployments in the region, which prevented me from acquiring even a single instance of a small-sized virtual machine. Eventually the support allowed me to procure a virtual machine from one of the smallest pricing tiers, offering limited computing and IO performance only. This proved to be a serious bottleneck — the database answers slowly even to simply queries — but this was still a better solution than migrating Diplomatiq's entire infrastructure into another region.\footnote{Microsoft Azure does not support moving resources across regions for most of its resource types~\cite{azure-migration} The migration process would have meant recreating and reconfiguring the entire infrastructure in another region, migrating all data into the region, then deleting all resources in the old region.} After the restrictions are lifted, I will upscale the database instance into a higher pricing tier offering more performance.
+
+\subsubsection{Installing, configuring and securing Neo4j Enterprise Edition}
+
+The procured virtual machine came with the 18.04 version of Ubuntu operating system, as I requested. Having experience with securing Ubuntu servers, I set up and secured SSH-based authentication and disabled password-based logins, and I installed and configured \emph{ufw (Uncomplicated Firewall)} to let through only the ports 22 (for SSH), 7443 (for Neo4j HTTPS administration), and 7687 (for Neo4j binary communication).
+
+I installed Neo4j Enterprise Edition, and configured its HTTPS connector to accept connections on the \emph{neo4j.diplomatiq.org} domain name. I created a public IP address for the virtual machine in Azure, and registered a DNS A record pointing the domain name to the IP address. For HTTPS connections, I also needed to acquire a valid TLS certificate issued to the domain name. For automated certificate management and renewal, I used Electronic Frontier Foundation's \emph{certbot}~\cite{certbot}, which deploys free TLS certificates from Let's Encrypt, an open certificate authority~\cite{letsencrypt}. I also configured its Neo4j's Bolt\footnote{Bolt is Neo4j's binary communication protocol~\cite{boltprotocol}. The back end application communicates with the database over Bolt protocol.} connector to accept encrypted database connections only. I disabled the insecure HTTP connector.
+
+On Neo4j's interactive web interface available on \emph{neo4j.diplomatiq.org}, I set up my own administrative user — with a long, cryptographically random password — to access the database, and deleted the default \emph{neo4j} user. Even though at this point both the database machine and Neo4j itself were properly secured, as an additional security measure, I sealed the machine off the internet with the help of Azure networking rules, making it available only within its own, and another dedicated subnet.\footnote{The back end service operates within the other dedicated subnet.}\footnote{Neo4j's subnet can be reached from my personal IP address, for administrative purposes.}
+
+\subsubsection{Setting up databases with dedicated users}
+
+For the \emph{production} and the \emph{development} environments mentioned earlier, I set up two different graph databases within Neo4j, \emph{diplomatiqbackend-production} and \emph{diplomatiqbackend-develop}. I created a dedicated user for both databases, ensuring that the environments are separated along database credentials as well as all other configuration. Since Neo4j is a schemaless database, and indices and constraints can be automatically managed by Neo4j-OGM, the object-graph mapping framework I used at implementing the Diplomatiq application, there was no need for further configuration regarding the databases.
 
 \subsection{Networking and security}
-tűzfal, vnet rules, TLS mindenhol
+
+I placed all Diplomatiq server resources in a common virtual network to be able to apply firewalls, logging, and filtering rules to the infrastructure. I created the virtual network \emph{vnet-prod-northeurope-001} within the resource group \emph{rg-diplomatiq-prod-001}, and set its address space to \lstinline{10.0.0.0/16}.
+
+Filtering network traffic can be achieved by security rules defined in \emph{Network Security Groups (NSGs)}. As NSGs are bound to subnets, at first I needed to create two subnets within \emph{vnet-prod-northeurope-001}:
+
+\begin{itemize}
+\item The \emph{snet-prod-northeurope-001} subnet contains Internet-facing services: the website, and the front end and back end services. Its address space is \lstinline{10.0.0.0/20}. As this subnet hosts only App Services, I delegated the whole subnet to the service \emph{Microsoft.Web/serverFarms} for better networking integrations~\cite{subnetdelegation}.
+\item The \emph{snet-prod-northeurope-002} subnet contains resources that should not be available over the Internet: the database machine and the Key Vaults. Its address space is \lstinline{10.0.16.0/20}.
+\end{itemize}
+
+Then I created two NSGs: \emph{nsg-internetfacing-prod-001} and \emph{nsg-restrictive-prod-001}. The earlier allows any inbound traffic coming from the Internet on ports 80 and 443, and allows any outbound traffic. The latter allows inbound traffic only coming from the address space of \emph{snet-prod-northeurope-001} on port 443 and 7687 — essentially it allows internal services to access the Key Vaults and Neo4j, but nothing else.
+
+\Cref{fig:infrastructure} presents a summary about Diplomatiq's server infrastructure, displaying the main networking characteristics and rules.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\textwidth]{figures/infrastructure.pdf}
+    \caption{Summary of Diplomatiq's server infrastructure}
+    \label{fig:infrastructure}
+\end{figure}
+
+\subsection{Resource locking}
+
+In order to prevent the accidental deletion of resources, I created a resource lock for the \emph{diplomatiq-prod-001} subscription. As long as this lock exists, the subscription and the contained resources are not allowed to be deleted.
