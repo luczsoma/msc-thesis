@@ -360,7 +360,7 @@ As part of its global infrastructure, Microsoft Azure provides services in more 
 
 Regions are bound to resource groups. Since the current needs of Diplomatiq do not justify deploying multi-region services, I created only one resource group in the Microsoft's North Europe (Ireland) region, named \emph{rg-diplomatiq-prod-001}. All resources presented later were deployed into this resource group. I chose the North Europe region because it is one of the oldest and best-supported Azure regions, and it is also among the regions having the highest service coverage in the Azure infrastructure. Later this decision proved problematic: North Europe is also one of the most popular regions, and due to the heavy interest in cloud solutions raised by the COVID-19 pandemic, Microsoft introduced limitations on new infrastructure deployments. Because of this, initially I was not able to deploy a virtual machine for the Neo4j graph database.
 
-\subsection{Storing secrets and credentials securely}
+\subsection{Securely storing secrets and credentials}
 
 Maintaining an IT infrastructure involves dealing with several kinds of credentials, keys, and certificates. Most of these are highly sensitive secrets, and letting an attacker steal them could cause critical service disruption and permanent damage. Microsoft Azure offers its Key Vault service for storing secrets in a secure and audited manner, guarded by configurable access policies.
 
@@ -373,7 +373,7 @@ The Key Vault service is offered in two tiers:
 
 Diplomatiq's infrastructure incorporates several kinds of secrets, which I decided to store in the Key Vault. Since the two tiers' prices differ only minimally, I chose the premium tier, offering the optional usage of HSMs. I created two Key Vault instances. The \emph{kv-sslcerts-prod-001} instance stores TLS certificates necessary for secure communication with clients and across services. The \emph{kv-prodcreds-prod-001} instance stores everything else: database access credentials, database encryption keys, and API keys of integrated services.
 
-Key Vault access policies can be fine-tuned in various ways. Each entity within the directory can have a separate set of cryptographic access to Key Vault instances. I configured the access policies of the instances to be as strict as possible: application identities\footnote{Azure provides a built-in way to identify a service within a directory, called \emph{application identity}.} required to access entries as part of their normal operation are able to \emph{get} an entry by referencing it by its identifier, but they can not \emph{list} entries, and they have no write access at all. As an additional security measure on top of authenticated and audited access, the Key Vault instances are not reachable from the Internet, only from the specified internal subnet the backend services are deployed to.
+Key Vault access policies can be fine-tuned in various ways. Each entity within the directory can have a separate set of access to the actual cryptographic operations performed by Key Vault instances. I configured the access policies of the instances to be as strict as possible: service identities\footnote{Azure provides a built-in way to identify and authenticate a service in a directory, called \emph{service identity}.} required to access entries as part of their normal operation are able to \emph{get} an entry by referencing it by its identifier, but they can not \emph{list} entries, and they have no write access at all. As an additional security measure on top of authenticated and audited access, the Key Vault instances are not reachable from the Internet, only from a specified internal subnet the backend services are deployed to.
 
 \subsection{Setting up the infrastructure for the website}
 
@@ -383,7 +383,7 @@ everything from keyvault
 \subsection{Setting up the infrastructure for the back end application}
 everything from keyvault
 
-\subsection{Database infrastructure}
+\subsection{Setting up the database infrastructure}
 \label{section:database}
 neo4j dns a record
 
