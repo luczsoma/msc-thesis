@@ -1,25 +1,183 @@
 \chapter{Overview and development of supportive libraries}
 \label{chapter:libraries}
 
-\section{project-config}
+This chapter gives an overview about the produced supportive libraries. It unfolds the reasons of their existence, as well as their features and implementation details.
 
 \section{crypto-random}
-\subsection{CI}
-100% code coverage
-SonarQube
-etc
+
+\subsection{Introduction}
+
+Cryptography is very sensitive to misuse. Even if there are no obvious programming errors in a software utilizing cryptographic primitives, and even if the result it produces is the right one, the implementation can still contain catastrophic mistakes, opening several kinds of vulnerabilities to malicious attackers. Cryptographic software development needs to be approached humbly, accepting that one should not incorporate cryptography into their software without experience or expert guidance.
+
+Secure software development often involves randomness and unpredictability. Secure encryption needs a cryptographically random, unpredictable key, and the best passwords are also the unpredictable ones. Even though most platforms offer reliable \emph{cryptographically secure pseudo-random number generators (CSPRNGs)}, there are few ready-to-use solutions for \emph{properly} generating strings from custom character sets, numbers from custom intervals and boolean values. This usually results in developers having little cryptographic experience implement \emph{something which seems to yield random results}, but is totally broken from a cryptographic point of view, opening up the application to a variety of attacks.
+
+Having worked in cryptographic software development for the last three years, I feel qualified to apply well-implemented cryptographic primitives when developing security-related software (but I do not feel qualified at all to implement those cryptographic primitives by myself). I built the \emph{crypto-random} TypeScript library with the goal to provide a simple, easy-to-use interface for generating cryptographically strong, \emph{uniformly distributed} random integers from custom intervals, strings from custom character sets, and boolean values. The library is based on the Web Crypto API's CSPRNG~\cite{getrandomvalues}, and contains no custom implementation of low-level cryptographic primitives. I use \emph{crypto-random} extensively in the Diplomatiq social network's TypeScript-based client application.
+
+\subsection{Features and operation}
+
+The Web Crypto API's CSPRNG can be invoked via the \emph{window.crypto.getRandomValues()} method in JavaScript, and it is implemented by almost all browsers~\cite{getrandomvalues-caniuse}. The method fills the provided typed array\footnote{In JavaScript, a typed array is either an Int8Array, a Uint8Array, an Int16Array, a Uint16Array, an Int32Array, or a Uint32Array.} with cryptographically secure random numbers. The API provides no immediate way to get random strings or booleans or other values — this is why I needed \emph{crypto-random}. Essentially, the library maps the random numbers it acquired from the Web Crypto API's CSPRNG to other data types, following the given user constraints.
+
+The library is able to generate the following random values:
+\begin{itemize}
+\item \emph{bytes} of the given number,
+\item \emph{integers} of the given number, within the given interval, optionally unique within the set of results,
+\item \emph{strings} of the given length, consisting of characters of the given character set, with optionally unique characters,
+\item \emph{boolean values}.
+\end{itemize}
+
+The library also offers a set of helper methods to create strings of the given length of various common alphabets, such as lowercase English letters, uppercase English letters, numbers, and the combination of these.
+
+\subsection{Discrete uniform distribution}
+
+In the context of random generation, discrete uniform distribution essentially means that the generator produces its output in a way that each of its \emph{possible} output values gets chosen as the \emph{actual} output value with equal probability~\cite{randomorgrandomness}. That is, each \emph{possible} output is equally likely to be the \emph{actual} output.\footnote{For example: heads or tails with a fair coin follows the discrete uniform distribution, as both outputs has \textonehalf~probability, meaning both outcomes are equally likely to happen.} This results that a large number of generated values follow the discrete uniform distribution. For random generators used in security-related applications, uniform distribution is a critical requirement, otherwise the generated output can be more easily predicted. I implemented \emph{crypto-random} so that its output follows the discrete uniform distribution.
+
+\subsection{Testing}
+
+The library's full functionality is tested with unit tests, resulting in 100\% code coverage. The code coverage metrics are always checked to remain 100\% as part of the library's continuous integration workflow.
+
+Besides basic input-output and format tests, the core generation logic is also tested if it correctly produces its output following a uniform distribution. These tests can fail with a minimal probability, and that's fine. The underlying default PRNGs are always considered to be cryptographically secure, so the actual randomness of the output is not tested.
 
 \section{convertibles}
-\subsection{CI}
-100% code coverage
-SonarQube
-etc
+
+\subsection{Introduction}
+
+The \emph{convertibles} library is a TypeScript utility library to convert values between textual and binary representation. Such conversions can be useful in several scenarios, e.g. transmitting binary data in a JSON structure. The library is extensively used in Diplomatiq.
+
+\subsection{Features}
+
+This module is built with the intention to help with the following:
+
+\begin{itemize}
+\item encode a source value into a better-suited serialization format,
+\item decode the serialized format and get the source value back.
+\end{itemize}
+
+For example, the source value can be a meaningful Unicode string value. This source value is what the application works with, this is what the business logic is built upon.
+
+If this source value needs to be stored or transmitted in different formats, the source value can be encoded into a less complex and better manageable target value, like:
+
+\begin{itemize}
+\item a byte array (e.g. for storing it in binary structures),
+\item a Base64 string (e.g. for transmitting it as the part of a JSON payload),
+\item or a Base64URL string (e.g. for storing it as a filename or putting it into a URL).
+\end{itemize}
+
+\Cref{table:conversion-table} summarizes the source and target formats supported by \emph{convertibles}.
+
+\begin{table}[!htbp]
+    \newcommand{\supported}{\tikz\draw[black,fill=black] (0,0) circle (0.8ex);\xspace}
+    \newcommand{\notsupported}{\tikz\draw[black,fill=none] (0,0) circle (0.8ex);\xspace}
+    \newcommand{\identical}{—}
+    \centering
+    \begin{tabular}{l|cccc}
+        \toprule
+        \textbf{Source format}  &   \textbf{Uint8Array} &   \textbf{Base64} &   \textbf{Base64URL}  &   \textbf{hex}    \\
+        \midrule
+        \textbf{Unicode string} &   \supported          &   \supported      &   \supported          &   \notsupported   \\
+        \textbf{Uint8Array}     &   \identical          &   \supported      &   \supported          &   \supported      \\
+        \bottomrule
+    \end{tabular}
+
+    \caption{Source and target formats supported by \emph{convertibles}}
+    \label{table:conversion-table}
+\end{table}
+
+\subsection{Testing}
+
+The library's full functionality is tested with unit tests, resulting in 100\% code coverage. The code coverage metrics are always checked to remain 100\% as part of the library's continuous integration workflow. All conversions are tested with several test vectors. The conversion of Unicode strings are tested in all Unicode normal forms.
 
 \section{resily}
-\subsection{CI}
-100% code coverage
-SonarQube
-etc
 
-\section{eslint-config-tslib}
-\section{eslint-config-angular}
+\subsection{Introduction}
+
+Resily is a TypeScript resilience and transient-fault-handling library that allows developers to express policies such as Retry, Fallback, Circuit Breaker, Timeout, Bulkhead Isolation, and Cache. I was inspired by App-vNext/Polly~\cite{pollygithub}, and decided to implement a similar toolset with a different approach, in TypeScript.
+
+\subsection{Features}
+
+Resily offers \emph{reactive} and \emph{proactive} policies:
+
+\begin{itemize}
+\item A \emph{reactive} policy executes the wrapped method, then reacts to the outcome (which in practice is the result of or an exception thrown by the executed method) by acting as specified in the policy itself. Examples for reactive policies include retry, fallback, circuit-breaker.
+\item A \emph{proactive} policy executes the wrapped method, then acts on its own as specified in the policy itself, regardless of the outcome of the executed code. Examples for proactive policies include timeout, bulkhead isolation, cache.
+\end{itemize}
+
+\subsection{Reactive policies}
+
+\subsubsection{Retry policy}
+
+The retry policy claims that many faults are transient and will not occur again after a delay. It allows configuring automatic retries on specified conditions. The number of retries can be configured, up to infinity. Before retrying, certain actions can be performed by adding retry hooks. The policy can be instructed to wait a certain number of milliseconds before retrying. The duration of the wait can depend on the number of the current retry. Also, \emph{resily} provides several predefined backoff strategies for retry policies, such as constant backoff, linear backoff, exponential backoff and jittered backoff.\footnote{The jittered backoff strategy uses the random integer generation logic of \emph{crypto-random}, thus \emph{resily} is dependent on \emph{crypto-random}.}
+
+\subsubsection{Fallback policy}
+
+The fallback policy claims that failures happen, and we can prepare for them. It allows configuring substitute values or automated fallback actions. The fallback chain can consists of an arbitrary number of elements. If there are no more elements on the fallback chain but the last result/exception is still reactive — meaning there are no more fallbacks when needed —, a FallbackChainExhaustedException is thrown. Before fallbacks, certain actions can be performed by adding fallback hooks.
+
+\subsubsection{Circuit breaker policy}
+
+The circuit breaker policy claims that systems faulting under heavy load can recover easier without even more load — in these cases it's better to fail fast than to keep callers on hold for a long time. If there are more consecutive faulty responses than the configured number, it breaks the circuit (blocks the executions) for a specified time period.
+
+The circuit breaker policy has 4 states, and works as follows:
+
+\begin{itemize}
+\item \emph{Closed} is the initial state. When closed, the circuit allows executions, while measuring reactive results and exceptions. All results (reactive or not) are returned and all exceptions (reactive or not) are rethrown. When encountering altogether \emph{numberOfConsecutiveReactionsBeforeCircuitBreak} reactive results or exceptions consecutively, the circuit transitions to \emph{Open} state, meaning the circuit is broken.
+\item While the circuit is in \emph{Open} state, no action wrapped into the policy gets executed. Every call will fail fast with a \emph{BrokenCircuitException}. The circuit remains open for the specified duration. After the duration elapses, the subsequent execution call transitions the circuit to \emph{AttemptingClose} state.
+\item The \emph{AttemptingClose} is a temporary state of an attempt to close the circuit. This state exists only between the subsequent execution call to the circuit after the break duration elapsed in \emph{Open} state, and the actual execution of the wrapped method. The next circuit state is determined by the result or exception produced by the executed method. If the result or exception is reactive to the policy, the circuit transitions back to \emph{Open} state for the specified circuit break duration. If the result or exception is not reactive to the policy, the circuit transitions to \emph{Closed} state.
+\item The circuit can be broken manually by calling \lstinline{policy.isolate()} from any state. This transitions the circuit to \emph{Isolated} state. While the circuit is in \emph{Isolated} state, no action wrapped into the policy gets executed. Every call will fail fast with an \emph{IsolatedCircuitException}. The circuit remains in Isolated state until \lstinline{policy.reset()} is called.
+\end{itemize}
+
+The number of consecutive reactions breaking the circuit can be configured, along with the duration of how long the circuit should be broken. It is also possible to subscribe state transitions with a set of hooks.
+
+\subsection{Proactive policies}
+
+\subsubsection{Timeout policy}
+
+The timeout policy claims that after some time, it is unlikely the call will be successful. It ensures the caller does not have to wait more than the specified timeout. On timeout, the policy's promise is rejected with a \emph{TimeoutException}.
+
+Only asynchronous methods can be executed within a timeout policy, or else no timeout happens. The timeout policy is implemented with \lstinline{Promise.race()}, racing the promise returned by the executed method with a promise that is rejected after the specified time elapses. If the executed method is not asynchronous (i.e. it does not have at least one point to pause its execution at), no timeout will happen even if the execution takes longer than the specified timeout duration, since there is no point in time for taking the control out from the executed method's hands to reject the timeout's promise.
+
+The executed method is fully executed to its end (unless it throws an exception), regardless of whether a timeout has occured or not. The timeout policy ensures that the caller does not have to wait more than the specified timeout, but it does neither cancel nor abort\footnote{TypeScript/JavaScript has no generic way of canceling or aborting an executing method, either synchronous or asynchronous. The timeout policy runs arbitrary user-provided code: it cannot be assumed the code is prepared in any way (e.g. it has cancel points). The provided code could be executed in a separate worker thread so it can be aborted instantaneously by terminating the worker, but run-time compiling a worker from user-provided code is ugly and error-prone.} the execution of the method. This means that if the executed method has side effects, these side effects can occur even after the timeout happened.
+
+\subsubsection{Bulkhead isolation policy}
+
+The bulkhead\footnote{A bulkhead is a wall within a ship which separates one compartment from another, such that damage to one compartment does not cause the whole ship to sink~\cite{pollygithub}.} isolation policy claims that too many concurrent calls can overload a resource. It limits the number of concurrently executed actions as specified. Method calls executed via the policy are placed into a size-limited bulkhead compartment, limiting the maximum number of concurrent executions. The size of the bulkhead compartment and the queue can be configured.
+
+If the bulkhead compartment is full — meaning the maximum number of concurrent executions is reached —, additional calls can be queued up, ready to be executed whenever a place falls vacant in the bulkhead compartment (i.e. an execution finishes). Queuing up these calls ensures that the resource protected by the policy is always at maximum utilization, while limiting the number of concurrent actions ensures that the resource is not overloaded. The queue is a simple FIFO\footnote{first in, first out} buffer.
+
+When the invoked on a method, the policy's operation can be described as follows:
+
+\begin{enumerate}
+\item If there is an execution slot available in the bulkhead compartment, execute the method immediately.
+\item Else if there is still space in the queue, enqueue the execution intent of the method — without actually executing the method —, then wait asynchronously until the method can be executed. An execution intent gets dequeued — and its corresponding method gets executed — each time an execution slot becomes available in the bulkhead compartment.
+\item Else throw a \emph{BulkheadCompartmentRejectedException}.
+\end{enumerate}
+
+From the caller's point of view, this is all transparent: the promise returned by the policy is:
+
+\begin{itemize}
+\item either eventually resolved with the return value of the wrapped method,
+\item or eventually rejected with an exception thrown by the wrapped method,
+\item or immediately rejected with a \emph{BulkheadCompartmentRejectedException}.
+\end{itemize}
+
+\subsubsection{Cache policy}
+
+The cache policy claims that within a given time frame, a system may respond with the same answer, thus there is no need to actually perform the query. It retrieves the response from a local cache within the time frame, after storing it on the first query.
+
+The cache policy is implemented as a simple in-memory cache. Its validity can be configured, and it can be invalidated manually as well. It works as follows:
+
+\begin{itemize}
+\item For the first time (and every further time the cache is invalid), the cache policy executes the wrapped method, and caches its result.
+\item For subsequent execution calls, the cached result is returned and the wrapped method is not executed — as long as the cache remains valid.
+\item The cache is valid as long as it is not expired (see time to live settings below) or manually invalidated.
+\end{itemize}
+
+\subsection{Testing}
+
+The library's full functionality is tested with unit tests, resulting in 100\% code coverage. The code coverage metrics are always checked to remain 100\% as part of the library's continuous integration workflow.
+
+\section{project-config}
+
+Bootstrapping new projects within an organization where projects have many common elements can be tedious. After creating new new project structure, the necessary files need to be copied from another repository, and the project-specific content needs to be replaced to match the new project. To avoid this manual work, I created the \emph{project-config} tool. This tool essentially bootstraps a new project with the provided name and description, meaning it copies all necessary configuration and description files into the new project, and replaces placeholders with the project name and description. It is implemented with a Bourne Again Shell (bash) script.
+
+\section{eslint-config-tslib and eslint-config-angular}
+
+ESLint is a configurable linter tool for maintaining the code quality of JavaScript and TypeScript repositories. It identifies and reports certain patterns. I have not found any such ESLint rulesets on the Internet, which would have been strict enough for my taste, so I decided to create two own rulesets: one for TypeScript libraries, and one for Angular. Both rulesets are used across Diplomatiq's TypeScript repositories.
