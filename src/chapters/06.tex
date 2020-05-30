@@ -19,7 +19,7 @@ Diplomatiq's long-term vision is to become an embedded, integrated system in dip
 
 Diplomatiq's initial target audience is the participants of Model United Nations conferences. As previously assumed, the number of students who participate in and/or organize MUN conferences is probably in the order of millions, worldwide. However, supporting MUN conferences is also an entry step into real diplomacy. This means that in the future, Diplomatiq's target audience will expand to career diplomats, government officials, and diplomatic administrators as well.
 
-\section{Long-term features against competitors}
+\section{Long-term feature goals against competitors}
 
 \subsection{Introduction}
 
@@ -160,57 +160,155 @@ If a user forgot their password, they can reset it with an email-based password-
 
 \section{Development and implementation details of the back end}
 
+\subsection{Introduction}
+
+Having already used Spring Boot in hobby projects, I had an explicit concept on how I want to build and layer the back end epplication. This section introduces the steps of setting up the Diplomatiq back end application — exposing an API over HTTPS, communicating with a database — from scratch until a publicly available application on the internet. Throughout the development, I strived to keep the quality, configurability and reliability of the application as high as possible. Security-related features and implementation details — such as authentication, authorization, additional security features for communicating over a HTTPS API, encrypted database entries, and additional web application security elements — of the application will be detailed in \Cref{chapter:security}.
+
+\subsection{Setting up an empty Spring Boot application}
+
+Since Spring Boot heavily advertises that since it needs minimal configuration due to its opinionated view of the platform and third-party libraries, it makes easy to start off with the framework. I wanted to make use of this, therefore I initialized an empty Spring Boot project with the help of Spring Initializr, which bootstraps projects with needing minimal configuration.\footnote{https://start.spring.io} I set up a Java-based project with Maven, using the latest released version of the framework. The project's group name has been \emph{org.diplomatiq}, its artifact name has been \emph{diplomatiq-backend}, and thus its full package name has been \emph{org.diplomatiq.diplomatiq-backend}. I chose JAR-packaging due to reasons detailed later, and set the required Java SDK version to Java 11.
+
+\subsection{API concepts}
+
+\subsubsection{Introduction}
+
+Since Diplomatiq's API is primarily for internal use\footnote{In the future, Diplomatiq will provide a public API as well, but on different design principles.}, I was able to make design decisions without worrying about adoption aspects. Since Diplomatiq's own client is the only one who consumes this API, I was able to build non-conventional architectural and security solutions\footnote{The implemented security measures will be detailed in \Cref{chapter:security}.} into the API without concern for its usability for external developers. Nevertheless, this approach ultimately lead to an API with transparent, well-documented, easy-to-follow conventions, fitting well into Diplomatiq's security framework.
+
+\subsubsection{Flat, RPC-like construction}
+
+REST\footnote{Representational State Transfer} APIs work well those kinds of semantics when the server exposes \emph{resources} over an API, and clients use those resources in certain ways. However, this semantics carries several inconvenient abstractions of and assumptions about the data model and the operation of the underlying application, which can make the API inflexible. During the development of Diplomatiq's back end API, I intentionally avoided the REST semantics in favor of a flat, RPC-like\footnote{Remote Procedure Call} interface, exposing \emph{methods} instead of \emph{resources}. Every method is exposed via its own HTTP endpoint with a one-depth fixed path, relative to the base URI of the API, e.g. \emph{https://api.diplomatiq.org/password-authentication-init-v1}.
+
+\subsubsection{JSON or binary communication}
+
+I decided to use JSON as the primary format of communication between the client and the server due to its transparency and ubiquitous support. However, if the content sent or received is represented in a purely binary format — e.g. an image file or a cryptographic key —, it can be easier to send it in its binary format rather than serializing then deserializing, therefore these resources can be transferred as binary.
+
+In Diplomatiq's API, I do not use content negotiation between the client and the server.\footnote{Content negotiation allows the server to expose data in different representations on the same URI, by the demands of the client.} Every exposed endpoint has a fixed semantics for receiving and sending data.
+
+\subsubsection{GET, POST, and PUT methods only}
+
+According to well-defined semantics below, I decided that the API endpoints should be callable either with the \emph{GET}, the \emph{POST} or the \emph{PUT} HTTP method.
+
+\begin{itemize}
+\item \emph{GET} methods are allowed to have query parameters, but no request body.\footnote{A GET request can not have a request body anyway.} Semantically, they should be used for getting data, and must never modify data.
+\item \emph{POST} methods are allowed to have a request body, but no query parameters. Semantically, they should be used for creating or modifying remote objects.
+\item \emph{PUT} methods are allowed to have both a request body and query parameters. Semantically, they should be used for uploading large amounts of binary data, with attached metadata as query parameters.
+\end{itemize}
+
+\subsubsection{Endpoint-level versioning}
+
+The versioning of the API is implemented on a per-endpoint basis, in order to provide maximum flexibility. Every exposed endpoint's path ends with the endpoint's actual version — such as \emph{/login-v1} and \emph{/login-v2} —, meaning they are essentially different endpoints, and can have completely different semantics and differing behaviour. Since the API is meticuluosly documented\footnote{API documentation will be detailed later.} — and also only used by Diplomatiq clients — this should not cause any problems, instead it allows to gradually modify the API instead of needing to publish a new vesion of the entire API with every breaking change.
+
+With endpoint-level versioning, endpoint deprecation can also be easier. After a new version of an endpoint was published — without client change necessary —, a new client using the new endpoint can be released, then the old version of the endpoint can be unpublished from the API. This workflow allows to think of API changes as step-by-step modifications instead of a new version of the entire interface. This results in the lack of versioning the interface as a whole.
+
+\subsection{Implementation details of the API}
+
+I used Spring Boot's built-in capabilities to implement the API itself. Since the API methods do not carry any resource-like semantics, they have been compartmentalized into controllers along authentication schemes and levels\footnote{The concept of authentication schemes and authentication levels is detailed in \Cref{chapter:security}.}. This means every method requiring the same authentication scheme and authentication level is placed in the same controller.
+
+Endpoints are automatically exposed by Spring Boot, according to the controller methods' annotations. These annotations define each endpoints' path (e.g. \emph{/login-v1}), HTTP request method (e.g. \emph{POST}), and its consumed and produced value (e.g. \emph{application/json}).
+
+Every input and output parameter of every endpoint is implemented as a separate class, unless the parameter is a simple value. The request and response objects are named unequivocally, based on the endpoint's name and version, i.e. the request object of the \emph{/login-v1} endpoint is \emph{LoginV1Request}, and its response object is \emph{LoginV1Response}. Marshalling and unmarshalling\footnote{Marshalling (serialization) means transforming an object's memory representation to a serialization format. Unmarshalling (deserialization) means transforming serialized object into memory reprepsentation.} is automatically performed by the Jackson library\footnote{https://github.com/FasterXML/jackson}, which is automatically configured by Spring Boot.
+
+\subsection{Documenting the API}
+
+I introduced and configured the \emph{springdoc-openapi} library\footnote{https://springdoc.org} for the automated documentation of the API according to the 3\textsuperscript{rd} version of the OpenAPI Specification~\cite{openapi-spec}. For human processing, the documentation is publicly available.\footnote{https://api.diplomatiq.org/openapi-documentation/v3/ui}
+
+The OpenAPI documentation also has a format processable by machines, meaning I was able to automatically generate a fully functioning API client for the front end project, based on the exposed API documentation for machines.\footnote{https://api.diplomatiq.org/openapi-documentation/v3/api}
+
+\subsection{Domain data model}
+
+The domain data model of the application consists of the following entities:
+
+\begin{itemize}
+\item \lstinline{AuthenticationSession}
+\item \lstinline{AuthenticationSessionMultiFactorElevationRequest}
+\item \lstinline{Committee}
+\item \lstinline{CommitteeSeat}
+\item \lstinline{Conference}
+\item \lstinline{Session}
+\item \lstinline{SessionMultiFactorElevationRequest}
+\item \lstinline{UserAuthentication}
+\item \lstinline{UserAuthenticationResetRequest}
+\item \lstinline{UserDevice}
+\item \lstinline{UserIdentity}
+\item \lstinline{UserTemporarySRPData}
+\end{itemize}
+
+\Cref{fig:data-model} displays a summary about Diplomatiq's entire data model with the entities' labels, labeled entity connections, and the connections' cardinalities.
+
+For mapping objects and object relations to graphs, Diplomatiq uses the Neo4j-OGM library, built into the Spring Data Neo4j (SDN) project. SDN provides a fully-fledged data access layer handling database sessions and transactions transparently. Classes annotated with the \lstinline{@NodeEntity} annotation are automatically regarded as domain entities, thus incorporated into SDN's scope, and can be handled via \emph{repositories} providing convenient, automatically configured CRUD\footnote{Create, Read, Update, Delete} methods. For more convenient entity modeling, I defined a hierarchy of abstract classes for entities. \lstinline{AbstractIdentifiableNodeEntity} generates 32-character-long random alphanumeric identifiers; \lstinline{AbstractCreationRecordedNodeEntity} and \lstinline{AbstractExpiringNodeEntity} handles storing creation and expiration uniformly.
+
+\begin{sidewaysfigure}[!p]
+    \centering
+    \includegraphics[width=\textheight]{figures/data-model.pdf}
+    \caption{The data model of the Diplomatiq application}
+    \label{fig:data-model}
+\end{sidewaysfigure}
+
+\subsection{Layering the application}
+
+Maintaining a transparent implementation hierarchy is key to efficient software maintenance. Therefore I defined the following application structure from the API layer to the database layer\footnote{This structure excludes everything which are handled by the application server, or the Spring Boot framework or any related libraries, such as reading and writing HTTP requests and responses, and actually interacting with the database.}:
+
+\begin{itemize}
+\item \emph{Filters} forward or reject an incoming HTTP request, and play a key part in Diplomatiq's security architecture, which is detailed in \Cref{chapter:security}.
+\item \emph{Controllers} handle HTTP requests and return HTTP responses. Thanks to the automated marshalling, the controller layer can be regarded responsible for converting JSON input to a POJO\footnote{Plain Old Java Object}, and forward it to the service layer (and vice versa).
+\item \emph{Services} are the highest-level actors of the business logic layer (BLL). They act as transaction boundaries: if an exception is thrown within the service, the related database transaction is rolled back.
+\item \emph{Engines} contain lower-level logic for performing specific computations.
+\item \emph{Utilities} and \emph{helpers} represent the lowest levels of the BLL, and abstract frequently used functionalities, such as creating an entity in a uniform way.
+\item \emph{Repositories} are lowest-level actors of the application hierarchy, representing the data access layer. They are responsible for reading from and writing to the database in a managed way.
+\end{itemize}
+
+\subsection{Error handling}
+
+In the following, the term \emph{business error} denotes all errors that the client's and the server's joint business logic is built upon, essentially meaning all those errors which the client needs to be distinguish from each other. In Diplomatiq, errors which are lower level than business errors do not need to be exposed — and should not need to be exposed\footnote{Too detailed errors exposed by the API can reveal sensitive security properties of a system to an attacker.} — by the server, thus they are mapped to a suitable business error.
+
+Business errors are handled in a semantically uniform way. One of my design principles was that the API either returns a success or an error, and I mapped this principle to the use two HTTP error codes only, where 200 means success, and 400 means error. In every case, the error response is an object consisting of a distinctive error code string, and optional retry information. Every business error has its own error code, thus the client can distinguish errors based on this error code. In case of an error which does not carry any specific semantics or its origin is unknown, the error code is \lstinline{InternalServerError}. Error codes are documented in the exposed API documentation.
+
+\subsection{Configuration}
+
+Most of the back end application's configuration has been externalized into configuration files or environment variables. Spring Boot supports externalized configuration well~\cite{spring-boot-reference-docs}. Database credentials and API keys are always stored in environment variables only, or they get a default, \textquote{dummy} value if their environment variables are not found. This makes development easier, since the local development environment can be set up with those dummy values, instead of needing to set up environment variables every time.
+
+\subsection{Packaging and deployment}
+
+Spring Boot provides two way of packaging an application: either as a traditional WAR\footnote{web application resource or web application archive} file, or a standalone, self-contained JAR\footnote{Java archive} file. The WAR file format is more suitable for deploying the software into a monolith application server hosting multiple web applications. The JAR file format is self-contained, meaning it encapsulates an embedded servlet container\footnote{The default servlet container for Spring Boot is Tomcat, but Jetty or Undertow are available as well~\cite{spring-boot-reference-docs}.}, and runs the actual Spring Boot application on this embedded application servlet container.
+
+The back end application is packaged as a standalone JAR file, as this approach fits more into Diplomatiq's infrastructure: there is no need to deploy and maintain a fully-fledged Java application server. Instead, only a self-contained JAR file needs to be uploaded onto the web server, and the web server needs to be configured to start the application defined by the JAR, and forward all incoming requests to the application.
+
+The deployment of the back end application is performed as part of the project's continuous delivery flow. Whenever the master branch of the repository is updated, the automated workflow defined in GitHub Actions eventually creates a distribution artefact. The final artefact is uploaded onto the \emph{staging} slot of the project's App Service in Microsoft Azure. Then the \emph{staging} slot's webserver instances are warmed up in order to receive production workload, meaning that the new version of the application is started on both instances. As soon as both instances reply to a continuous polling with a non-error response — meaning they are fully initialized —, the \emph{staging} slot is automatically swapped into production, resuting in no downtime during deployments.
+
 \section{Development and implementation details of the front end}
 
+\subsection{Introduction}
 
+Having used the Angular framework throughout my career so far, I had a defined concept on how I want to build Diplomatiq's client application. Although the implemented application is relatively small and provides few features, I wanted to build the software on a high-quality foundation, so later it can be easily extended on demand.
 
+\subsection{Creating an empty Angular application}
 
+I bootstrapped an empty Angular application with Angular CLI.\footnote{https://cli.angular.io} The project has been named \emph{diplomatiq-frontend}. As part of the guided bootstrapping process, I added several modules to the application, such as routing, and set the project's stylesheet format to SCSS. Angular CLI created the folder structure of the project, and installed all necessary dependencies via NPM.
 
+\subsection{Structuring the application}
 
+\subsubsection{Components}
 
+A routed Angular web application loads \emph{components} on configured paths: such components encapsulate a view displayed in the web browser and a logic of how the component works and reacts to user interactions~\cite{angular-reference-docs}. Components can be nested into each other, allowing developers to create complex application layouts. I tried to keep the component layer as thin as possible, in order to abstract all actual application logic into \emph{services}.
 
+\subsubsection{Modules}
 
+Angular applications are modular. \emph{Modules} are a set of components and configuration, which belong to one coherent application unit, a workflow, or closely related set of capabilities~\cite{angular-reference-docs}. Modularization can be beneficial in terms of compartmentalized application loading or application bundle size. However, the front end application of Diplomatiq consists of only one \emph{root} module, making no use of those advantages.
 
+\subsubsection{Services}
 
+Services are application classes containing logic. Besides components, most of Diplomatiq's front end application code is in services, which are responsible for data manipulation, and transitively — through a dedicated API service — for calling the back end API as well. Services are usually injected into components or other services with dependency injection.
 
+\subsection{API access and error handling}
 
+I implemented a dedicated service for performing API calls. This service exposes the endpoints of the back end's API, which is compartmentalized by authentication schemes and levels. As the API client is automatically generated using the \emph{openapi-generator}\footnote{https://github.com/OpenAPITools/openapi-generator} tool, this compartmentalization is visible in the client as well, meaning the API service actually exposes additional \textquote{services} instead of the endpoints themselves. The exposed services are the partial APIs compartments — each with endpoints with the same authentication scheme and level —, and they are the ones providing the actual endpoint stubs.
 
+The \emph{openapi-generator} tool can be configured to generate code for several libraries and frameworks, including Angular. Although, the server stubs generated for Angular did not offer any way for attaching dynamically computed headers to the server request, as it did not provide any way to add before-request or after-request hooks to the generated code. This is a requirement for Diplomatiq, because the request's cryptographic signature — required by the back end API as a header — is not a static, configurable value, but needs to be computed from the request dynamically. Therefore I configured the generator to generate code utilizing the Fetch API~\cite{fetchapi}, a modern, native browser API for performing asynchronous, cancellable network requests.
 
----
+API errors are handled in an after-request hook of the generated API client. If the API response has a different HTTP response code than 200, a JavaScript error is thrown with its error message set to be the received error code. If the received error response has no error code, or is not an error which conforms to the Diplomatiq error scheme mentioned earlier — meaning the back end application is incapable even to produce a business error for some reason —, the \lstinline{InternalServerError} error code is set.
 
-\section{Chosen technologies}
-\subsection{On the front end layer}
-Angular
+\subsection{Packaging and deployment}
 
-\subsection{On the back end layer}
-Spring Boot
+Angular provides sophisticated build tools, capable of generating all source files of the application into one bundle with \emph{webpack}\footnote{https://webpack.js.org}, one of today's most popular JavaScript bundler. Therefore, building the distribution artefact essentially means that only an Angular-specific command needs to be invoked, which builds the application bundle, and copies it with additional assets, such as images and icons, into a folder, usually called \emph{dist}. The contents of the \emph{dist} folder contains the entire application, and can be uploaded to a web server.
 
-\subsection{On the database layer}
-Neo4j
-
-\subsection{Client-server communication}
-HTTPS only ofc
-JSON-RPC API
-no resources, no REST at all
-
-\subsection{API documentation}
-OpenAPI v3
-
-
-\section{Developing the front end}
-components
-services
-CI
-platform with 3 slots
-
-\section{Developing the back end}
-CI
-platform with 3 slots
-filters
-controllers
-engines
-services
-repositories
-utils
-session handling
-error handling
+Similarly to the back end project, the deployment of the front end application is performed as part of the project’s continuous delivery flow. Whenever the master branch of the repository is updated, the automated workflow defined in GitHub Actions eventually creates a distribution artefact. The final artefact is uploaded onto the staging slot of the project’s App Service in Microsoft Azure. After the files were placed into the webserver's public folder, and ready to be served to users, the staging slot is automatically swapped into production, resulting in no downtime during deployments.\footnote{In case of static web applications, there is no need to warm up the instances, as there is no back end application to start on the web server. However, Azure copies static files into its webservers' public folder by taking the webserver offline, and I wanted to avoid the downtime caused by that.}
