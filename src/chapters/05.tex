@@ -33,9 +33,7 @@ In the context of random generation, discrete uniform distribution essentially m
 
 \subsection{Testing}
 
-The library's full functionality is tested with unit tests, resulting in 100\% code coverage. The code coverage metrics are always checked to remain 100\% as part of the library's continuous integration workflow.
-
-Besides basic input-output and format tests, the core generation logic is also tested if it correctly produces its output following a uniform distribution. These tests can fail with a minimal probability, and that's fine. The underlying default PRNGs are always considered to be cryptographically secure, so the actual randomness of the output is not tested.
+The library's full functionality is tested with unit tests, resulting in 100\% code coverage. The code coverage metrics are always checked to remain 100\% as part of the library's continuous integration workflow. Besides basic input-output and format tests, the core generation logic is also tested whether it produces its output following a uniform distribution, based on an adaptive approach of Pearson's $\chi^2$ test~\cite{ryabko2004new}. The test itself follows Fourmilab's test implementation~\cite{fourmilabrandom}. The underlying default PRNGs are always considered to be cryptographically secure, so the actual randomness of the output is not tested.
 
 \section{convertibles}
 
@@ -90,11 +88,11 @@ The library's full functionality is tested with unit tests, resulting in 100\% c
 
 \subsection{Introduction}
 
-Resily is a TypeScript resilience and transient-fault-handling library that allows developers to express policies such as Retry, Fallback, Circuit Breaker, Timeout, Bulkhead Isolation, and Cache. I was inspired by App-vNext/Polly~\cite{pollygithub}, and decided to implement a similar toolset with a different approach, in TypeScript.
+The \emph{resily} TypeScript resilience and transient-fault-handling library allows developers to express policies such as Retry, Fallback, Circuit Breaker, Timeout, Bulkhead Isolation, and Cache. I was inspired by App-vNext/Polly~\cite{pollygithub}, and decided to implement a similar toolset with a different approach, in TypeScript.
 
 \subsection{Features}
 
-Resily offers \emph{reactive} and \emph{proactive} policies:
+The \emph{resily} library offers \emph{reactive} and \emph{proactive} policies:
 
 \begin{itemize}
 \item A \emph{reactive} policy executes the wrapped method, then reacts to the outcome (which in practice is the result of or an exception thrown by the executed method) by acting as specified in the policy itself. Examples for reactive policies include retry, fallback, circuit-breaker.
