@@ -23,6 +23,8 @@ Graphs are mathematically defined data structures being broadly used in several 
 
 Graph databases are NoSQL databases, which store data in graphs instead of the traditional, table-based approach.\footnote{The underlying data storage methods vary. There are graph databases which store graph data in relational tables, introducing another layer of abstraction between the stored physical data and the database.} In graph databases, a relationship represented as an edge in the graph is a \textquote{first-class} entity, and has the same basic storage characteristics as a node. Relationships are directly linked to entities, and therefore entities are directly linked to each other via relationships. This allows the querying of related entities to be fast, since the process does not involve lookups.
 
+In data models where connections between data represent just as much business value as the actual data itself, it can be sensible to use graph database technologies over SQL databases. Whereas in relational databases, connections between entities rely on foreign keys and pivot tables, in graph databases they come naturally, without additional modeling needs. A (domain-specific) social network is exactly such case, where the connections value the same as data, so using a graph database was a natural decision to make.
+
 \subsection{The property graph data model}
 
 It is common to define graphs as a set of objects, in which some object pairs are connected to each other. In this model, an object is called \emph{vertex} or \emph{node} or \emph{point}, and a connection between two \emph{vertices} is called \emph{edge} or \emph{relation}. Connections can be detailed further by specifying their directionality, also they can be \emph{labeled} to define them even more. Similarly labeling vertices leads to the model of \emph{typed graphs}. If we assign properties to the nodes or relations, we get the model of \emph{property graphs}. Properties, as shown in \Cref{fig:property-graph}, are usually key-value pairs in the format of \lstinline{key = `value'}. Generally, keys are strings, and values represent common data types like string, integer, float, etc.
@@ -34,10 +36,14 @@ It is common to define graphs as a set of objects, in which some object pairs ar
     \label{fig:property-graph}
 \end{figure}
 
-\subsection{Neo4j}
+\subsection{The Neo4j graph database}
 \label{subsection:preliminaryneo4j}
 
+The field of graph databases has been gradually expanding in the recent years. Many vendors offer graph database solutions either based on a pure graph model or on multi-model approaches~\cite{arangodb-graph, datastax-graph, orientdb-graph}. Databases vary by query languages as well, one of the most popular being GraphQL, an open-source data and manipulation language for APIs~\cite{graphql}.
+
 Among a handful of graph database vendors~\cite{graph-dbs}, Neo Technology's Neo4j is the most popular one~\cite{graph-dbs-raking}. It features full ACID-compliance upon a pure graph data model, contrary to other vendors' multi-model approaches. Besides Neo Technology, Neo4j is backed by the open-source community as well~\cite{neo4j-github}. There are two variants: \emph{Community Edition} and \emph{Enterprise Edition} with an extended feature set~\cite{neo4j-licensing}. Neo4j also offers a program tailored to startup companies~\cite{neo4j-startup-program}. With the help of this startup program, companies can build their applications on the Enterprise Edition of the Neo4j platform, free of charge.\footnote{Certain limitations apply: the company must have at most 50 employees and at most \$3 million annual revenue, among others~\cite{neo4j-startup-program}.}
+
+During my Bachelor's Thesis, I had the opportunity to experience the depths of Neo4j. I refactored and extended a static code analysis software, which builds Abstract Syntax Trees, and stores them in Neo4j for running queries over the graph structure. In this project, Neo4j proved to be a stable, mature database, even usable for analysing repositories having more than 30,000 lines of code, which got mapped to an Abstract Syntax Tree with millions of nodes and even more millions of relationships. Every since then, I am confident that Diplomatiq will use Neo4j as its database platform.
 
 \subsection{Cypher}
 
@@ -51,6 +57,33 @@ Cypher is a query language developed especially for graph databases by Neo Techn
 \end{figure}
 
 Cypher syntax is elegant and expressive, thus very readable. Besides using it to represent nodes and relationships, we can utilize it to access the Neo4j's indexing capabilities and stored procedures as well. Even complex pattern-matching conditions can be expressed easily and intuitively in Cypher. Although today's modern application development frameworks — adopting increasingly capable data mapping solutions — make it less and less necessary to directly interact with databases, complex queries can still involve composing database commands manually. Therefore the expressiveness and ease of use of a database query language still remains essential.
+
+Basic querying capabilities include matching a given pattern. Patterns can include nodes, and directed relationships, and Cypher can also match by nodes' or relationships' properties. \Cref{fig:cypher-matching} shows a basic example on how to find every such relationship, in which a male human loves another female human.
+
+\begin{figure}[!htb]
+    \centering
+    \lstinline|MATCH (b:Human { gender: "male" })-[:LOVES]->(a:Human { gender: "female" })|
+    \caption{Basic pattern matching capabilities}
+    \label{fig:cypher-matching}
+\end{figure}
+
+Inserting nodes and relationships can also be achieved in an easy and semantic way. \Cref{fig:cypher-create} shows a basic example on creating two nodes and a relationship between them.
+
+\begin{figure}[!htb]
+    \centering
+    \lstinline|CREATE (b:Human { gender: "M" })-[r:LOVES]->(a:Human { gender: "F" })|
+    \caption{Creating two nodes and a relationship between them}
+    \label{fig:cypher-create}
+\end{figure}
+
+For avoiding inserting duplicate nodes, creation can be replaced with merging. In this case, if a node with the specified identifiers exists, it gets updated with any additional data specified by the query. Merging is similar to the create operation, as shown on \Cref{fig:cypher-merge}.
+
+\begin{figure}[!htb]
+    \centering
+    \lstinline|MERGE (b:Human { gender: "M" })-[r:LOVES]->(a:Human { gender: "F" })|
+    \caption{Merging to avoid creating duplicate data}
+    \label{fig:cypher-merge}
+\end{figure}
 
 \section{Git and GitHub}
 
