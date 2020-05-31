@@ -63,34 +63,194 @@ Click-jacking is a type of attacks where a page is embedded into another page vi
 
 \section{Authentication and authorization}
 
-according to NIST https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-63-3.pdf, multifactor authentication is necessary
+\subsection{Introduction, motivation, and terminology}
 
-oawsp top 10. listán 2. broken auth https://owasp.org/www-project-top-ten/
+Broken and insecure authentication schemes are a constant problem of web applications~\cite{ptsecurity-2019}. On the list summarizing the top then security vulnerabilities of the Open Web Application Security Project, broken authetication is located in the second place~\cite{owasp-topten}.
 
-authentication why not oauth/openid/standard megoldások?
+Besides an authentication scheme being technically correct — it uses suitable protocols and hides sensitive information by techniques like encryption —, it also needs to provide additional guarantees on ensuring a user's identity. Password-only authentication is a contributing factor in most authentication attacks~\cite{ptsecurity-2019}. Times are changing: yesterday's recommendations on authentication systems based on strong, frequently changing passwords are replaced with more modern approaches based on multiple factors of authentication. NIST explicitly advises to organizations that instead of focusing on password policies, incorporate multi-factor authentication solutions into their systems~\cite{nistidguide}.
 
-    1. signed requests and authentication
+I wanted to get authentication and authorization right in Diplomatiq's systems. For certain sensitive interactions, I wanted to provide additional guarantees on the user's identity — beyond the standard approach that \textquote{authenticate the user \emph{only once} based on their password and an additional second factor, then later in any point in time believe without verification that the user sitting in front of the computer is still the same} — to avoid stealing session credentials. I also wanted to be able to further encrypt sensitive between the client and the server. Even though all communications are already done encrypted over Transport Layer Security, I still believe there is no such thing as too much security — as long as it does not mean a worse user experience.
 
-    2. session levels
+In the following, I use the term authentication in two different contexts. \emph{User authentication} means that the user cryptographically proves to the server, that they are in posession of a valid password, which corresponds to the given email address, then performs a second step of email-based authentication. In essence, \emph{user authentication} means a user logs in to Diplomatiq. The process of user authentication results in a set of \emph{login credentials}, which the client stores locally, encrypted. \emph{Request authentication} means that the client cryptographically proves to the server that they are in posession of valid login credentials, without sending the actual credentials over the network. In essence, request authentication happens on a per-API-request basis, and essentially means that when the logged in user's Diplomatiq client application performs a request against Diplomatiq's API, the API checks if the client provided a legitimate cryptographic proof about the posession of the necessary credentials. The goal of user and request authentication is to get a strong proof about the user's identity.
 
-    3. SRP
+In the following, the term authorization means that an already authenticated user is checked by the server whether they have the necessary level of access and level of \emph{session assurance} to perform a given API operation. Basically this is the same as the original meaning of authorization, but Diplomatiq's authorization scheme incorporates the elapsed \emph{time} into the authorization. A session's assurance level can be elevated with re-authenticating, meaning an elevated session assurance level provides a stronger proof about the user's identity sitting in front of the computer at a given point in time.\footnote{After the specified time, the assurance level expires, and a user needs to re-authenticate again for sensitive operations.} Similarly to request authentication, authorization also happens on a per-request basis, and the request is rejected if the user does not have the required level of access.
 
-    4. cryptography
+\subsection{Why not OpenID Connect or OAuth 2.0?}
 
-aláíráshoz az amazonos aláírásból indultam ki.
+There are several already established, mature authentication and authorization standards on the market, like OpenID Connect\footnote{https://openid.net/connect}~\cite{openid-connect-core} for authentication, and OAuth 2.0\footnote{https://oauth.net/2}~\cite{rfc6749} for authorization. Having implemented several applications upon both methodologies, I have some, but not exhaustive experience on using these standards. After further inspections, I concluded that neither solutions would satisfy all my below specified requirements.
 
-device container
+Not implementing OAuth 2.0 introduces a restriction of federated authentication, meaning users will not be able to authenticate themselves to Diplomatiq with e.g. their social media accounts. This question does not get addressed in this thesis.
+
+\subsection{Requirements}
+
+In the following, I summarize the requirements I formulated regarding Diplomatiq's authentication and authorization framework, and I also describe the threats they mitigate.
+
+\subsubsection{Zero-knowledge password proof}
+
+User authentication should be implemented upon a \emph{zero-knowledge password proof} scheme. The client should be able to verify to the server, that the user knows the password, without the password or its any derivative form ever leaving the client or being transmitted over the network. The server should store neither the user's password, nor any password-equivalent data. This prevents attackers from stealing user passwords either over the network, or by breaking into the back end application's database.
+
+\subsubsection{Mandatory multi-factor authentication}
+
+Beyond password, a mandatory second factor of authentication should be used for user authentication. This prevents attackers to perform password-based authentication and impersonate the user.
+
+\subsubsection{No personal data for request authentication}
+
+No personally identifiable data should be used for authenticating a network request. This implies that network traffic between the client and the server should not contain personally identifiable information about the authenticated user by default, unless of course the request's actual payload contains such information to be stored on the server. This is a further layer of protection over Transport Layer Security.
+
+\subsubsection{Shared symmetric key between the client and the server for encryption and signing}
+
+User authentication should result in a long-term shared symmetric key between the client and the server for performing further encryption of very sensitive data and credentials transmitted over the network. This prevents attackers to obtain plaintext credentials if they somehow manage to steal and decrypt and encrypted network request over TLS.
+
+\subsubsection{Signed network requests}
+
+Authenticated network requests should be signed, and the signature should incorporate all characteristics of the request, including its timestamp. The request should be rejected by the server if the signature is invalid, or if the timestamp is outside a given interval to the current time. This prevents attackers to replay a network request if they somehow manage to steal one over TLS.
+
+\subsubsection{Time-based session assurance levels}
+
+The scheme should provide a way to ascertain the user identity before performing sensitive operations. That is, the scheme should incorporate assurance levels for sessions in the meaning of a higher assurance level means a higher certainty regarding the identity of the user sitting in front of the computer at a given point in time. Sensitive API operations should require a higher session assurance level. This prevents attackers to perform sensitive API operations impersonating the user, who left their computer unlocked.
+
+\subsubsection{Immediate logout}
+
+The scheme should not rely solely on expiring entities. Request credentials should be authenticated and authorized for every request, and this should always incorporate checking the validity of the provided credentials. This implies that access tokens should be stored on the server, along with their expiry. This prevents attackers from stealing abandoned access credentials, which have not yet expired.
+
+\subsection{Protecting endpoints}
+
+Diplomatiq endpoints can be split into two parts:
+
+\begin{itemize}
+\item \emph{Unauthenticated} (i.e. \textquote{not logged in}) endpoints are publicly available for every user, and they do not need to be able to identity the user. They do not require signed requests.
+\item \emph{Authenticated} (i.e. \textquote{logged in}) endpoints are available after performing user authentication only. These endpoints require the user to be identifiable, and requests to be signed.
+\end{itemize}
+
+Endpoints are protected using filters implemented in Spring Boot. Filters are ordered, and executed sequentially. They can either forward, modify or even reject the request with an error. As described later, both authenticated and unauthenticated are protected by filters.
+
+\subsection{User authentication}
+
+\subsubsection{Proving the knowledge of the password without ever revealing the password}
+
+For performing zero-knowledge password-based authentication, I decided to use the Secure Remote Password (SRP) protocol's latest, 6a version~\cite{rfc2945}. SRP is an augmented password-authenticated key agreement (PAKE) protocol, which specifies a set of cryptographic methods for performing password-based authentication between two parties over an insecure channel, without sending the password or its any derivative over the channel. Similarly to other PAKE protocols, an attacker obtaining the network traffic\footnote{Since Diplomatiq uses TLS, it is unlikely that an attacker would be able to eavesdrop client-server communication} of the authentication would not be able to perform an exhaustive search for the password, based solely on the obtained network data. Since the server does not store the password, even if an attacker steals the server's database, they would not be able to impersonate the user, unless they perform an exhaustive key search for the password first, based on the stolen data.
+
+The authentication results in a shared, symmetric session key between the parties. The protocol provides strong cryptographic proof to both parties that they successfully authenticated against each other, i.e. the server can cryptographically verify the password.
+
+\subsubsection{Logging in}
+
+The user authentication flow consists of the following steps:
+
+\begin{enumerate}
+\item The client initiates SRP's password authentication process by providing their email address to the server, and receives a response with the server's cryptographic challenge value.
+\item The client performs cryptographic calculations on the challenge value, mixing the password's one-way hash\footnote{For hashing, Diplomatiq uses the \emph{scrypt} password-based key derivation function to slow down attackers, who want to perform an exhaustive search for the password~\cite{rfc7914}.} into the calculations, eventually resulting in a value called a \emph{password proof}. The password proof does not have a direct relation to the plaintext password itself, but it is based on the server challenge value and the password, and allows the server to verify that the client is indeed in posession of the valid password. With this step, the client has completed the password authentication, and the client and the server has a shared cryptographic key, which I named \emph{authentication session key}, and the client is in possession of an authentication session.
+\item To perform the login operation, which results in a \emph{client device} authorized to acquire a \emph{session}, the user needs to complete multi-factor authentication. This involves receiving an email with a code expring in 5 minutes, and providing the code to the server. Performing multi-factor authentication elevates the user's authentication session from password-elevated level to multi-factor elevated level.
+\item With a multi-factor elevated authentication session, the user is authorized to call the login operation. This issues a \emph{client device} with a device identifier, and returns a \emph{device key} and a long-term \emph{session token}. The device identifier, device key and session token are both encrypted values, wrapped into a DiplomatiqAEAD structure. The device key is encrypted with the authentication session key, and the device identifier and the session token is encrypted with the device key. To acquire the device identifier and the session token, the client first decrypts the device key with the authentication session key, then decrypts the device identifier and the session token. The device identifier is required to identify, which device of which user calls the API, and the session token is a long-term secret credential authorizing the issued device to acquire a session after completing the login flow.
+\item With a logged-in device, the client device is authorized to acquire a session, by providing a session token to the server. The session token is a sensitive credential, therefore it is sent encrypted with the device key.
+\item After acquiring a session, the client can perform calls against the API, providing valid request authentication with the session credentials.
+\end{enumerate}
+
+\Cref{fig:login} dispalys a summary of the above user authentication scheme. The main security characteristics of the scheme is provided by the cryptographic key hierarchy built upon the authentication session key, which was actually never transmitted over the network. Instead, it was calculated independently on the server and on the client, as a result of the authentication procedure described by the SRP protocol. Essentially all further credentials and cryptographic keys are (transitively) encrypted with this authentication session key, which is impossible to be eavesdropped by an attacker, as it does not leave machines.
 
 \begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/authentication-filter.pdf}
-    \caption{The authentication filter}
-    \label{fig:authentication-filter}
+    \centering
+    \includegraphics[width=\textwidth-1cm]{figures/login.pdf}
+    \caption{The login flow}
+    \label{fig:login}
 \end{figure}
+
+\subsubsection{Securely storing login session credentials locally}
+
+After performing the user authentication, the client needs to persist the credentials of the issued device locally in a secure way. For this, I introduce a device container, which is an encrypted container for storing sensitive credentials in the client browser's local storage. The device container is essentially a DiplomatiqAEAD structue, encrypted with the \emph{device container key}. The device container is never persisted in unencrypted form.
+
+For automatically logging in the user in a given web browser by data stored in a device container as a result of a previous login, the device container key needs to be queried from the server on a public endpoint.\footnote{At this point, the client does not access its credentials, as they are in the encrypted device container.} This key can be regarded as a not-so-sensitive data, since even if an attacker obtains a device container key, they would still need the actual device container, which is stored only in the browser's local storage.
+
+\subsection{Request authentication}
+
+\subsubsection{Overview}
+
+After the user has authenticated themselves by logging in into Diplomatiq, each API request initiated by the user is also authenticated and authorized one-by-one. In this section I present different authentication schemes authenticating with different credentials over the user's authentication lifecycle, and I introduce the concept of session assurance levels.
+
+\subsubsection{Authentication schemes}
+
+From the point of a user entering their password to the first successful \textquote{logged-in} API call, there are several steps. These steps were introduced previously, and now I present the underlying authentication schemes I implemented. Schemes are essentially the definitions of how the request should be authenticated, and how the request's signature needs to be checked. All schemes are versioned in order to be changed on demand.
+
+The \emph{Unauthenticated} \textquote{authentication scheme} does not require the user to be authenticated, as its name suggests. It does not require signed requests, but it requires that the client includes the client identifier header, and also requires the client clock will be in sync with the server's clock. The client identifier and the clock synchronization is detailed later.
+
+The \emph{AuthenticationSessionSignatureV1} scheme is used during the password and multi-factor authentication flow of the login process. The authentication session is identified by the authentication session id, and the request is signed with the authentication session key the client and the server mutually agreed on.
+
+The \emph{DeviceSignatureV1} scheme is used after the user performed the password and multi-factor authentication, and logged in, meaning performed a call to the login endpoint, which issued a client device to them. As previously mentioned, this long-term device has a device key, and a session token issued to them. Requests performed with the this scheme is signed with the device key, and identified by the attached device id as a header. Actually, this scheme is used for only two purposes: getting a session with the session token and logging out.
+
+The \emph{SessionSignatureV1} scheme is used after the user acquired a session. This scheme is used for every regular API call, and its requests are signed with the device key, and identified by the device key and the session key attached as headers.
+
+\Cref{fig:authentication-schemes} displays a detailed summary about authentication session schemes.
 
 \begin{figure}[!htb]
     \includegraphics[width=\textwidth]{figures/authentication-schemes.pdf}
     \caption{A summary of Diplomatiq's authentication schemes}
     \label{fig:authentication-schemes}
+\end{figure}
+
+\subsubsection{Session assurance levels}
+
+There are certain very sensitive API methods and operations, which can require to re-authenticate the user. Such methods implemented in Diplomatiq are password change or cancelling a conference application, which require the user's current password. More sensitive methods, such as cancelling a whole conference or deleting a user account require both the user's password and performing multi-factor authentication. These safeguards are implemented to make sure that the user really is who she says she is, and not an attacker with malicious intents. For handling these kinds of safeguards in a uniform way instead of ad-hoc re-authentication solutions, I introduce the concept of \emph{session assurance levels}. A higher session assurance level provides a higher assurance about the current user's identity, as a result of a higher level of re-authentication.
+
+In the extensible, hierarchical system I defined the following assurance levels:
+
+\begin{itemize}
+\item \emph{RegularSession} is the lowest assurance level. It assures that a user is logged in, and can be renewed without user interaction following its 1-hour expiry.
+\item \emph{PasswordElevatedSession} is the medium assurance level. It is valid for 15 minutes from point the user provided a valid password, thus it essentially proves that the user provided correct password in the last 15 minutes.
+\item \emph{MultiFactorElevatedSession} is the highest assurance level. It is valid for 5 minutes from the point the user completed a multi-factor authentication flow. \emph{MultiFactorElevatedSession} assurance level can only be acquired with a \emph{PasswordElevatedSession} assurance level. This assurance level therefore proves that in the last 15 minutes, the user provided correct password, and in the last 5 minutes, they completed a multi-factor authentication flow through their email address, and Diplomatiq can be pretty sure that the user is who she says she is.
+\end{itemize}
+
+\Cref{fig:session-assurance-levels} displays a summary of the above assurance levels. Sequence diagrams presenting the process of a session elevation can be found in the Appendix.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\textwidth-1.5cm]{figures/session-assurance-levels.pdf}
+    \caption{Diplomatiq's session assurance levels}
+    \label{fig:session-assurance-levels}
+\end{figure}
+
+An authentication session level is bound to a set of API methods implemented in separate controllers via Spring's controller proxy authorization. This means that if I want to create a method with a password-level session assurance, I just need to insert the method's definition in the controller defining password-level methods. As I already implemented the underlying infrastructure, there is no further configuration needed.
+
+The session assurance levels are stored and handled on the server. The client does not even know about its credentials' current assurance level, it just tries to call the API with its current credentials, and retries after requesting password or multi-factor authentication whenever the server throws a \lstinline{SessionElevationRequired} error. Whenever a request arrives to the server, it checks if the targeted controller's required assurance level is met by the provided authentication credentials, and throws the previously mentioned error, if not.
+
+\subsection{Client version identifier}
+
+For logging purposes, every request against Diplomatiq's API must contain a \lstinline{ClientId} header, defining which Diplomatiq client's which version initiated the request to the API. In the future, when Diplomatiq has clients for desktop computers and smartphones, this header will also identify the platform. The current value of the \lstinline{ClientId} header is \emph{Diplomatiq/DiplomatiqFrontend/X.Y.Z}, where X, Y and Z are the client's version numbers according to the semantic versioning scheme. Requests lacking the \lstinline{ClientId} header are rejected.
+
+\subsection{Client clock discrepancy}
+
+It is unfortunate if the client's clock differs from the server's clock, because the client can display invalid data. Differing clocks can also break along the safeguards against replay attacks, since a client signing a request with wrong clock setting will not be able to create a valid signature. Therefore, every request against Diplomatiq's API must contain an \lstinline{Instant} header, which contains the client's current instant\footnote{Instant is a universal, instantaneous point on the time-line in the UTC time zone.} in the ISO~8601~\cite{iso8601} simplified string format, including date and time.\footnote{Such as: \lstinline{2020-05-31T23:59:59Z}}
+
+\subsection{Signing requests}
+
+In order to make cryptographically sure that requests originate from an authorized client, all authenticated requests against Diplomatiq's API must be signed with a key, which is determined by the endpoint's required authentication scheme. This allows the server to retrieve the client's signing key (such as a device key) by the attached request metadata (such as a device id provided in a request header), then verify that the attached signature was indeed created with the key.
+
+On the one hand, this solution provides an additional layer of protection against request tampering on top of TLS, and on the other hand, since the request should contain its timestamp in the \lstinline{Instant} header, it also prevents attackers to perform replay attacks after somehow obtaining a plaintext request.
+
+\begin{figure}[!htb]
+    \includegraphics[width=\textwidth]{figures/request-signature.pdf}
+    \caption{The process of signing a request}
+    \label{fig:request-signature}
+\end{figure}
+
+\subsection{Implementing request authentication with Spring filters}
+
+nem használunk spring sessiont
+
+\begin{figure}[!htb]
+    \includegraphics[width=\textwidth]{figures/elevate-to-password-session.pdf}
+    \caption{Server calls for elevating a session to password level}
+    \label{fig:elevate-to-password-session}
+\end{figure}
+
+\begin{figure}[!htb]
+    \includegraphics[width=\textwidth]{figures/elevate-to-mfa-session.pdf}
+    \caption{Server calls for elevating a session to multi-factor level}
+    \label{fig:elevate-to-mfa-session}
+\end{figure}
+
+\begin{figure}[!htb]
+    \includegraphics[width=\textwidth]{figures/request-filters.pdf}
+    \caption{A summary of the back end application's request filters}
+    \label{fig:request-filters}
 \end{figure}
 
 \begin{figure}[!htb]
@@ -106,47 +266,33 @@ device container
 \end{figure}
 
 \begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/controller-authorization.pdf}
-    \caption{A summary of controller authorization}
-    \label{fig:controller-authorization}
-\end{figure}
-
-\begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/elevate-to-mfa-session.pdf}
-    \caption{Server calls for elevating a session to multi-factor level}
-    \label{fig:elevate-to-mfa-session}
-\end{figure}
-
-\begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/elevate-to-password-session.pdf}
-    \caption{Server calls for elevating a session to password level}
-    \label{fig:elevate-to-password-session}
-\end{figure}
-
-\begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/request-filters.pdf}
-    \caption{A summary of the back end application's request filters}
-    \label{fig:request-filters}
-\end{figure}
-
-\begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/session-assurance-levels.pdf}
-    \caption{Diplomatiq's session assurance levels}
-    \label{fig:session-assurance-levels}
-\end{figure}
-
-\begin{figure}[!htb]
     \includegraphics[width=\textwidth]{figures/signature-verification-filter.pdf}
     \caption{The signature verification filter}
     \label{fig:signature-verification-filter}
+\end{figure}
+
+\begin{figure}[!htb]
+    \includegraphics[width=\textwidth]{figures/authentication-filter.pdf}
+    \caption{The authentication filter}
+    \label{fig:authentication-filter}
+\end{figure}
+
+\begin{figure}[!htb]
+    \includegraphics[width=\textwidth]{figures/controller-authorization.pdf}
+    \caption{A summary of controller authorization}
+    \label{fig:controller-authorization}
 \end{figure}
 
 \section{Encrypting sensitive data in the database}
 
 encrypted db values, key versioning to avoid birthday problem
 
+nem okozott mérhető változást a request
+
 \section{Other security measures}
 
 nem adunk ki a userről adatot (hogy létezik-e ilyen mailcímű user, stb)
+
+device container key is queried no error
 
 security.txt
