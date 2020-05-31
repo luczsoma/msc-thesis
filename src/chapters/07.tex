@@ -27,7 +27,7 @@ Although it does not contain self-implemented low-level cryptographic elements, 
 
 Similarly to other block cipher modes of operation, GCM also needs an initialization vector for a properly randomized output. According to the recommendation of the National Institute of Standards and Technology — a prevalent actor in cryptographic standards as well —, the initialization vector should be unique and 12 bytes long for efficient calculations~\cite{dworkin2007sp}. The initialization vector is also needed for decryption, so it needs to be included in the serialized packet. The output of AES-GCM is the ciphertext and an authentication tag, which is essentially a digest of the ciphertext, the initialization vector, and the additional authenticated data, verifying the integrity of all three. Most cryptography APIs append the authentication tag to the end of the ciphertext. As the authentication tag is needed for performing decryption, it needs to be included in the serialized packet.
 
-For encoding the initialization vector, the ciphertext, the additional authenticated data and the authentication tag as a binary structure, I created a lightweight binary serialization scheme for DiplomatiqAEAD.\footnote{Although there are established standards like ASN.1, I decided that using it for this simple purpose only would cause more pain than gain.} The scheme consists of a header and a body. The body consists of the initialization vector, the additional authentication data, the ciphertext, and the authentication tag, in this order. Since each part of the body can essentially be of arbitrary length, the header contains each body part's length encoded on a fixed length: the length of the initialization vector on 1 byte, the length of the ciphertext on 4 bytes, the length of the additional authenticated data on 4 bytes, and the length of the authentication tag on 1 byte. All lengths are encoded in big-endian byte order, in unsigned magnitude representation. Encoding the length of the ciphertext and the additional authenticated data on 4 bytes introduces a planned constraint that DiplomatiqAEAD can be used only for encrypting and authenticating maximum 4 gigabytes of data at once. \Cref{fig:aead} presents the binary serialization format of DiplomatiqAEAD.
+For encoding the initialization vector, the ciphertext, the additional authenticated data and the authentication tag as a binary structure, I created a lightweight binary serialization scheme for DiplomatiqAEAD.\footnote{Although there are established standards like ASN.1, I decided that using them for this simple purpose only would cause more pain than gain.} The scheme consists of a header and a body. The body consists of the initialization vector, the additional authentication data, the ciphertext, and the authentication tag, in this order. Since each part of the body can essentially be of arbitrary length, the header contains each body part's length encoded on a fixed length: the length of the initialization vector on 1 byte, the length of the ciphertext on 4 bytes, the length of the additional authenticated data on 4 bytes, and the length of the authentication tag on 1 byte. All lengths are encoded in big-endian byte order, in unsigned magnitude representation. Encoding the length of the ciphertext and the additional authenticated data on 4 bytes introduces a planned constraint that DiplomatiqAEAD can be used only for encrypting and authenticating maximum 4 gigabytes of data at once. \Cref{fig:aead} presents the binary serialization format of DiplomatiqAEAD.
 
 \begin{figure}[!htb]
     \includegraphics[width=\textwidth]{figures/aead.pdf}
@@ -220,10 +220,28 @@ For logging purposes, every request against Diplomatiq's API must contain a \lst
 It is unfortunate if the client's clock differs from the server's clock, because the client can display invalid data. Differing clocks can also break along the safeguards against replay attacks, since a client signing a request with wrong clock setting will not be able to create a valid signature. Therefore, every request against Diplomatiq's API must contain an \lstinline{Instant} header, which contains the client's current instant\footnote{Instant is a universal, instantaneous point on the time-line in the UTC time zone.} in the ISO~8601~\cite{iso8601} simplified string format, including date and time.\footnote{Such as: \lstinline{2020-05-31T23:59:59Z}}
 
 \subsection{Signing requests}
+\label{subsection:signing-requests}
 
 In order to make cryptographically sure that requests originate from an authorized client, all authenticated requests against Diplomatiq's API must be signed with a key, which is determined by the endpoint's required authentication scheme. This allows the server to retrieve the client's signing key (such as a device key) by the attached request metadata (such as a device id provided in a request header), then verify that the attached signature was indeed created with the key.
 
 On the one hand, this solution provides an additional layer of protection against request tampering on top of TLS, and on the other hand, since the request should contain its timestamp in the \lstinline{Instant} header, it also prevents attackers to perform replay attacks after somehow obtaining a plaintext request.
+
+To be an effective security measure, a request signature must incorporate every possible characteristics of the request. Following the request signature scheme of Amazon Web Services\footnote{https://aws.amazon.com}~\cite{awssigning}, I created a signature scheme which works as follows:
+
+\begin{enumerate}
+\item The client creates the \emph{CanonicalRequest} string, creates its cryptographic digest with SHA-256, then encodes the digest bytes with Base64 encoding, resulting in \emph{RequestSha256Base64}.
+\item The client prefixes \emph{RequestSha256Base64} with the authentication scheme used for authenticating the request, resulting in \emph{StringToSign}.
+\item The client creates the cryptographic signature of \emph{StringToSign} with using the HMAC-SHA-256 keyed-hash message authentication code algorithm, using the authentication scheme's corresponding key as the algorithm's key, then encodes the signature bytes with Base64 encoding, resulting in \emph{RequestSignatureBase64}.
+\item The client sets the \emph{Authorization} header of the request to \emph{RequestSignatureBase64} prefixed by the authentication scheme.
+\end{enumerate}
+
+The \emph{CanonicalRequest} is a newline-separated string containing the request's HTTP method, its relative path the the server's base URI, its final query string, the \emph{CanonicalHeaders}, and the \emph{PayloadSha256Base64}.
+
+The \emph{CanonicalHeaders} is also a newline-separated string, containing all request headers in \lstinline{key:value} format, where the \lstinline{key} is converted to its lowercase invariant. As the server needs to know, which headers were incorporated into the signature\footnote{A web browser application does access \emph{all} HTTP headers of a sent request, therefore the signature algorithm only includes a subset of the headers.}, an additional \emph{SignedHeaders} header is also attached to the request containing the the signed headers' lowercase key separated by semicolons. The \emph{SignedHeaders} header also needs to be included into \emph{CanonicalHeaders}.
+
+The \emph{PayloadSha256Base64} is the cryptographic digest of the request's final payload, created with the SHA-256 algorithm. If the request has no payload, the \emph{PayloadSha256Base64} still needs to be included.
+
+\Cref{fig:request-signature} presents a summary about creating a signature for Diplomatiq's API.
 
 \begin{figure}[!htb]
     \includegraphics[width=\textwidth]{figures/request-signature.pdf}
@@ -233,66 +251,65 @@ On the one hand, this solution provides an additional layer of protection agains
 
 \subsection{Implementing request authentication with Spring filters}
 
-nem használunk spring sessiont
+Requests arriving to the back end application are authenticated with the filtering capabilities provided by Spring~\cite{spring-boot-reference-docs}. The back end application is implemented as a fully stateless application relying only on persisted database data instead of in-memory storage. Thus Spring's built-in session handling capabilities are not used.\footnote{This also implies that Diplomatiq does not use any cookie-based authentication mechanisms.}
+
+In Spring, filters are executed sequentially, with all filters being able to modify, forward, or reject the incoming HTTP request. Filters can be inserted into several parts of the \emph{filter chain}, but I inserted Diplomatiq's request authentication filters to the beginning of the \emph{security filter chain}, implying that the server should properly authenticate the request before doing anything else. Diplomatiq's request authentication filters do not modify the incoming request: they either forward it to the next filter, or reject it by returning a specific API error, usually \emph{BadRequest}, \emph{Unauthorized} or \emph{SessionElevationRequired}.
+
+I implemented the following filters, listed in the order of invocation:
+
+\begin{enumerate}
+\item The \emph{base headers checker filter} checks whether a non-empty \lstinline{ClientId} and a non-empty \lstinline{Instant} header was provided with the request. If not, rejects the request with \emph{BadRequest} error code.
+
+\item The \emph{Clock discrepancy filter} checks whether the UTC instant provided in the \lstinline{Instant} header is in sync with the server time. If not, rejects the request with \emph{ClockDiscrepancy} error code. The discrepancy tolerance is 1 minute.
+
+\item The \emph{signature verification filter} verifies the request's signature. It parses the provided \lstinline{Authorization} header to get the authentication scheme and the signature in Base64 encoding, then it creates the signature of the request by the received request data based on the authentication scheme. The signing key is retrieved from the database by the provided device id or authentication session id as a header. The filter creates the request according to the scheme detailed in \Cref{subsection:signing-requests}, then compares the provided request signature with the calculated one.\footnote{The comparison happens with a constant-time algorithm to avoid time-based side-channel attacks.} If the two do not match, the filter rejects the request with \emph{Unauthorized} error code.
+
+\item After the above formal checks, the \emph{authentication filter} is responsible for actually authenticating the request by the provided authentication session scheme, and the provided credentials. The filter parses the \lstinline{Authorization} header to get the authentication scheme, then it looks for the authentication scheme's corresponding credentials among the headers. If the credentials are found, and valid, the filter pronounces the request as \emph{authenticated} by setting the user as the authenticated principal in Spring's security context\footnote{The security context is configured to have a per-request lifecycle: it is flushed after the request was served.}, along with the applied authentication scheme.
+\end{enumerate}
 
 \begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/elevate-to-password-session.pdf}
-    \caption{Server calls for elevating a session to password level}
-    \label{fig:elevate-to-password-session}
-\end{figure}
-
-\begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/elevate-to-mfa-session.pdf}
-    \caption{Server calls for elevating a session to multi-factor level}
-    \label{fig:elevate-to-mfa-session}
-\end{figure}
-
-\begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/request-filters.pdf}
+    \centering
+    \includegraphics[width=\textwidth-2cm]{figures/request-filters.pdf}
     \caption{A summary of the back end application's request filters}
     \label{fig:request-filters}
 \end{figure}
 
-\begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/base-headers-checker-filter.pdf}
-    \caption{The base headers checker filter}
-    \label{fig:base-headers-checker-filter}
-\end{figure}
+\subsection{Implementing controller authorization}
+
+The filters' job is to \emph{authenticate} the request — meaning they should verify that the request comes from a registered user, who has the necessary credentials to perform a properly signed request against the API —, and store this authentication information — including the user's identity and the used authentication scheme — in Spring's security context. The user and the request can be authenticated without context-dependent information: the filters and the authentication processes do not need to know, what are the access level requirements of the actual target controller. For \emph{authorizing} the request, the system needs to receive authentication data and contextual data as well, since different controllers, methods, resources can demand different authorization levels.
+
+The above essentially means that the \emph{authentication} filter put an information into the security context about \emph{who} (which user) authenticated and \emph{how} (with which authentication scheme) did they authenticate, and this information is processed by the target controller's \emph{authorization} to determine if the credentials are suitable for interacting with the controller.
+
+I implemented controller authorization with the goal of being able to determine on a per-controller basis, that:
+
+\begin{enumerate}
+\item which authentication schemes can be used for calling the controller's methods,
+\item which is the lowest session assurance level, that is needed for interacting with the controller's methods.
+\end{enumerate}
+
+The controller authorization was implemented with Spring's \emph{method security} features, using the \lstinline{@PreAuthorize} annotation. This essentially enables the developer to specify predefined or custom methods, which are wrapped around controllers using proxies~\cite{spring-boot-reference-docs}, and need to evaluate to true in order to the request be forwarded to the controller. Evaluating to false causes the request to be rejected with an \emph{AccessDenied} error.\footnote{Due to the only application of controller authorization is to determine if the user has a sufficient session assurance level, I mapped the \emph{AccessDenied} error directly to \emph{SessionElevationRequired}. If the request is rejected because of an authentication scheme mismatch at this point, that can only mean a faulty or outdated client.}
+
+I implemented a set of custom \emph{method security expressions} in order to be used with controller authorization. Each authentication scheme required a different method security expression. Method security expressions are provided the required level of assurance as parameters. This means that a controller, which requires all requests to be authenticated with a session having password-elevated assurance level, needs to be only annotated with the \lstinline{authenticatedBySessionWithAssuranceLevel('PasswordElevatedSession')} within a \lstinline{@PreAuthorize()} expression, and no further configuration is required.
+
+\Cref{fig:controller-authorization} displays the internal logic I built into the controller proxy authorization. If a request passes controller proxy authorization as well, it is forwarded to the controller.
 
 \begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/clock-discrepancy-filter.pdf}
-    \caption{The clock discrepancy filter}
-    \label{fig:clock-discrepancy-filter}
-\end{figure}
-
-\begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/signature-verification-filter.pdf}
-    \caption{The signature verification filter}
-    \label{fig:signature-verification-filter}
-\end{figure}
-
-\begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/authentication-filter.pdf}
-    \caption{The authentication filter}
-    \label{fig:authentication-filter}
-\end{figure}
-
-\begin{figure}[!htb]
-    \includegraphics[width=\textwidth]{figures/controller-authorization.pdf}
+    \centering
+    \includegraphics[width=\textwidth-2cm]{figures/controller-authorization.pdf}
     \caption{A summary of controller authorization}
     \label{fig:controller-authorization}
 \end{figure}
 
-\section{Encrypting sensitive data in the database}
+\section{Encrypting sensitive database data}
 
-encrypted db values, key versioning to avoid birthday problem
+Although the database is only accessible with securely stored credentials with audited access, and the database machine itself is also sealed off the Internet, I wanted to take extra measures for database security. Although Neo4j offers at-rest encryption~\cite{neo4jatrestencryption}, it is not integrated into the database, and it still does not prevent data breaches when the database machine itself gets compromised.
 
-nem okozott mérhető változást a request
+My primary requirement for database data encryption is that it should be completely transparent in terms of application logic, meaning it should not require additional code to fetch or decrypt an encrypted database value. My second requirement is that the encryption should happen on a per-property basis, enabling plain and encrypted values to be stored in the database as well. My final requirement is that the encryption key(s) should not be stored in the database, and should not even relate to the database. The database in itself should not even know if a given property of an entity is encrypted or not.
 
-\section{Other security measures}
+For these requirements, I set up a \emph{database encryption key} key in the \emph{kv-prodcreds-prod-001} Key Vault, and attached this key to the back end application's configuration as a referenced environment variables, the same way as I did for other access credentials detailed in \Cref{chapter:infrastructure}. Then I configured attribute converters\footnote{Attribute converters for Neo4j are responsible for serializing unsupported data types to other data types which Neo4j can natively store. Attribute converters can host arbitrary logic.} provided for Neo4j for handling those types of data, which I wanted to encrypt. In the attribute converter, I used the \emph{DiplomatiqAEAD} primitive to securely encrypt, or decrypt and authenticate the data, using the database encryption key mentioned above.
 
-nem adunk ki a userről adatot (hogy létezik-e ilyen mailcímű user, stb)
+As attribute converters are fully transparent and require no additional code, the first requirement was met. Encryption happens on a per-property basis — individual properties are encrypted instead of whole entities or the whole database —, so my second requirement is met. The encryption key is stored outside the database, outside the database machine, in a secure, audited Key Vault service, so my third requirement is also met.
 
-device container key is queried no error
+This scheme protects the data in a different way than traditional at-rest database encryption. Even if attackers manage to steal the entire database, or even if they somehow obtain root-level access to the database machine, they will not be able to acquire sensitive data stored in the database, since all sensitive data is encrypted with an encryption key stored outside the database machine. In this hypothetical scenario, the attackers would additionally need to steal the database encryption key as well, either from the Key Vault service, or from the back end application's servers. Both scenarios are highly unlikely. This provides a layered security model to data stored in Diplomatiq's database.
 
-security.txt
+As encryption and decryption happens on the back end application's servers, the database machine's performance constraints do not apply to encrypting or decrypting database data. I performed several measurements to see if it is any slower to save or retrieve encrypted data than plain data, but the difference proved not to be measurable.

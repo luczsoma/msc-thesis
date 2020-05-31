@@ -1,4 +1,4 @@
-<mxfile host="localhost" modified="2020-05-17T14:24:35.817Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.45.0 Chrome/78.0.3904.130 Electron/7.2.4 Safari/537.36" etag="dYjOvuUnxvJP9Z-NI6E5" version="13.0.9">
+<mxfile host="" modified="2020-05-31T14:32:35.363Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.45.1 Chrome/78.0.3904.130 Electron/7.2.4 Safari/537.36" etag="k0n5t3GWyuoij-iOxMa2" version="13.1.3">
     <diagram id="Sttl8mKHboSlKdve3zSI" name="Page-1">
         <mxGraphModel dx="625" dy="579" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
@@ -31,7 +31,7 @@
                         <mxPoint y="-15" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="11" value="&lt;b&gt;AuthenticationScheme RequestSha256Base64&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                <mxCell id="11" value="&lt;b&gt;StringToSign&lt;/b&gt;&lt;br&gt;(AuthenticationScheme RequestSha256Base64)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="360" y="370" width="200" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="13" value="&lt;b&gt;RequestSignatureBase64&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
