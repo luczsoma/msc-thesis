@@ -103,7 +103,7 @@ User authentication should result in a long-term shared symmetric key between th
 
 \subsubsection{Signed network requests}
 
-Authenticated network requests should be signed, and the signature should incorporate all characteristics of the request, including its timestamp. The request should be rejected by the server if the signature is invalid, or if the timestamp is outside a given interval to the current time. This prevents attackers to replay a network request if they somehow manage to steal one over TLS.
+Authenticated network requests should be signed, and the signature should incorporate all characteristics of the request, including its timestamp. The request should be rejected by the server if the signature is invalid, or if the timestamp is outside a given interval to the current time. This prevents attackers to replay a network request\footnote{A replay attack is performed by replaying or delaying an otherwise valid network data transmission. Replay attacks can be carried out by eavesdropping network traffic, then re-transmitting it later.} if they somehow manage to steal one over TLS.
 
 \subsubsection{Time-based session assurance levels}
 
@@ -118,8 +118,8 @@ The scheme should not rely solely on expiring entities. Request credentials shou
 Diplomatiq endpoints can be split into two parts:
 
 \begin{itemize}
-\item \emph{Unauthenticated} (i.e. \textquote{not logged in}) endpoints are publicly available for every user, and they do not need to be able to identity the user. They do not require signed requests.
-\item \emph{Authenticated} (i.e. \textquote{logged in}) endpoints are available after performing user authentication only. These endpoints require the user to be identifiable, and requests to be signed.
+\item \emph{Unauthenticated} (i.e. \textquote{not logged in}) endpoints are publicly available for every user, and they do not need to be able to identity the user. They do not require requests to be signed either.
+\item \emph{Authenticated} (i.e. \textquote{logged in}) endpoints are available after performing user authentication only. These endpoints require the user to be identifiable, and requests must be signed in order to prevent tampering and replay attacks.\footnote{Request signing serves as another layer of protection over TLS.}
 \end{itemize}
 
 Endpoints are protected using filters implemented in Spring Boot. Filters are ordered, and executed sequentially. They can either forward, modify or even reject the request with an error. As described later, both authenticated and unauthenticated are protected by filters.
@@ -128,7 +128,7 @@ Endpoints are protected using filters implemented in Spring Boot. Filters are or
 
 \subsubsection{Proving the knowledge of the password without ever revealing the password}
 
-For performing zero-knowledge password-based authentication, I decided to use the Secure Remote Password (SRP) protocol's latest, 6a version~\cite{rfc2945}. SRP is an augmented password-authenticated key agreement (PAKE) protocol, which specifies a set of cryptographic methods for performing password-based authentication between two parties over an insecure channel, without sending the password or its any derivative over the channel. Similarly to other PAKE protocols, an attacker obtaining the network traffic\footnote{Since Diplomatiq uses TLS, it is unlikely that an attacker would be able to eavesdrop client-server communication} of the authentication would not be able to perform an exhaustive search for the password, based solely on the obtained network data. Since the server does not store the password, even if an attacker steals the server's database, they would not be able to impersonate the user, unless they perform an exhaustive key search for the password first, based on the stolen data.
+For performing zero-knowledge password-based authentication, I decided to use the Secure Remote Password (SRP) protocol's latest, 6a version~\cite{rfc2945}. SRP is an augmented password-authenticated key agreement (PAKE) protocol, which specifies a set of cryptographic methods for performing password-based authentication between two parties over an insecure channel, without sending the password or its any derivative over the channel. Similarly to other PAKE protocols, an attacker obtaining the network traffic\footnote{Since Diplomatiq uses TLS, it is unlikely that an attacker would be able to eavesdrop client-server communication.} of the authentication would not be able to perform an exhaustive search for the password, based solely on the obtained network data. Since the server does not store the password, even if an attacker steals the server's database, they would not be able to impersonate the user, unless they perform an exhaustive key search\footnote{i.e. brute-forcing} for the password first, based on the stolen data.
 
 The authentication results in a shared, symmetric session key between the parties. The protocol provides strong cryptographic proof to both parties that they successfully authenticated against each other, i.e. the server can cryptographically verify the password.
 
